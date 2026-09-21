@@ -1,103 +1,740 @@
-const container =
-    document.getElementById(
-        "indicadores"
-    );
+const FIRST_FILTERS = [
+    {
+        id: "status",
+        apiKey: "status_acerto",
+        search: true
+    },
+    {
+        id: "tipoGranja",
+        apiKey: "tipo_granja",
+        search: true
+    },
+    {
+        id: "modelo",
+        apiKey: "modelo",
+        search: true
+    },
+    {
+        id: "produtor",
+        apiKey: "produtor",
+        search: true
+    },
+    {
+        id: "tecnico",
+        apiKey: "tecnico",
+        search: true
+    },
+    {
+        id: "tipoLinhagem",
+        apiKey: "tipo_linhagem",
+        search: false
+    },
+    {
+        id: "linhagem",
+        apiKey: "linhagem",
+        search: true
+    }
+];
 
 
-function criarCard(metric) {
-
-    const card =
-        document.createElement("article");
-
-
-    card.className =
-        "indicator-card";
-
-
-    card.innerHTML = `
-
-        <div class="card-header">
-
-            <h2>
-                ${metric.titulo}
-            </h2>
-
-            <div class="card-actions">
-
-               <button
-    class="info-button"
-    data-metric-id="${metric.id}"
-    aria-label="Ver fórmula de ${metric.titulo}"
->
-    i
-</button>
-
-                <a
-                    class="details-link"
-                    href="detalhes.html?indicador=${metric.id}"
-                >
-                    Detalhes →
-                </a>
-
-            </div>
-
-        </div>
-
-        <div
-            id="chart-${metric.id}"
-            class="chart"
-        ></div>
-
-    `;
+const ORDEM_INDICADORES = [
+    "iep",
+    "ca",
+    "cac",
+    "gmd",
+    "mortalidade",
+    "idade",
+    "peso_medio",
+    "vazio",
+    "morte_transporte",
+    "cac_ref",
+    "aves_abatidas"
+];
 
 
-    container.appendChild(card);
+let formulasCatalogo = {};
+let dashboardData = null;
+let performanceController = null;
+
+const sortState = {};
 
 
-    return echarts.init(
+const filters = new FilterController({
+    fields: FIRST_FILTERS,
+
+    onChange: () => {
+        carregarDashboard(false);
+    },
+
+    includeDependentRefresh: true
+});
+
+
+function errorMessage(message) {
+    const el =
         document.getElementById(
-            `chart-${metric.id}`
-        )
-    );
+            "mensagemErro"
+        );
 
+    el.textContent = message;
+    el.classList.remove("hidden");
 }
 
 
-
-const charts = {};
-
-let formulasCatalogo = {};
-
-Object.values(METRICS)
-    .forEach(metric => {
-
-        charts[metric.id] =
-            criarCard(metric);
-
-    });
-
-document
-    .addEventListener(
-        "click",
-        event => {
-
-            const botao =
-                event.target.closest(
-                    ".info-button"
-                );
+function clearError() {
+    document
+        .getElementById(
+            "mensagemErro"
+        )
+        .classList
+        .add("hidden");
+}
 
 
-            if (!botao) {
-                return;
+function formatValue(value, metric) {
+    if (
+        value === null
+        || value === undefined
+    ) {
+        return "—";
+    }
+
+    const number = Number(value);
+
+    if (Number.isNaN(number)) {
+        return "—";
+    }
+
+    if (metric.unidade === "aves") {
+        return number.toLocaleString(
+            "pt-BR",
+            {
+                maximumFractionDigits: 0
             }
+        );
+    }
 
+    const digits =
+        Number.isInteger(
+            metric.casas_decimais
+        )
+            ? metric.casas_decimais
+            : 2;
 
-            abrirFormula(
-                botao.dataset.metricId
-            );
-
+    return number.toLocaleString(
+        "pt-BR",
+        {
+            minimumFractionDigits: digits,
+            maximumFractionDigits: digits
         }
     );
+}
+
+
+function detailUrl(
+    metricId,
+    ano = null,
+    mes = null
+) {
+    const params =
+        new URLSearchParams();
+
+    params.set(
+        "indicador",
+        metricId
+    );
+
+    Object.entries(
+        filters.values()
+    ).forEach(
+        ([key, value]) => {
+            params.set(key, value);
+        }
+    );
+
+    if (ano) {
+        params.set("ano", ano);
+    }
+
+    if (mes) {
+        params.set("mes", mes);
+    }
+
+    return `detalhes.html?${params.toString()}`;
+}
+
+
+function getSort(metricId) {
+    if (!sortState[metricId]) {
+        sortState[metricId] = {
+            key: "mes",
+            direction: "asc"
+        };
+    }
+
+    return sortState[metricId];
+}
+
+
+function toggleSort(
+    metricId,
+    key
+) {
+    const state =
+        getSort(metricId);
+
+    if (state.key === key) {
+        state.direction =
+            state.direction === "asc"
+                ? "desc"
+                : "asc";
+    }
+    else {
+        state.key = key;
+        state.direction =
+            key === "mes"
+                ? "asc"
+                : "desc";
+    }
+
+    renderDashboard();
+}
+
+
+function sortIcon(
+    metricId,
+    key
+) {
+    const state =
+        getSort(metricId);
+
+    if (state.key !== key) {
+        return "↕";
+    }
+
+    return state.direction === "asc"
+        ? "↑"
+        : "↓";
+}
+
+
+function rowsFor(
+    metricId,
+    metric,
+    years,
+    months
+) {
+    const rows =
+        months.map(
+            (month, index) => {
+                const values = {};
+
+                years.forEach(year => {
+                    values[String(year)] =
+                        metric
+                            .por_ano?.[
+                                String(year)
+                            ]?.[index]
+                        ?? null;
+                });
+
+                return {
+                    monthNumber:
+                        month.numero,
+                    monthName:
+                        month.nome,
+                    values
+                };
+            }
+        );
+
+    const state =
+        getSort(metricId);
+
+    const direction =
+        state.direction === "asc"
+            ? 1
+            : -1;
+
+    rows.sort(
+        (a, b) => {
+            if (state.key === "mes") {
+                return (
+                    a.monthNumber
+                    - b.monthNumber
+                ) * direction;
+            }
+
+            const av =
+                a.values[state.key];
+            const bv =
+                b.values[state.key];
+
+            const emptyA =
+                av === null
+                || av === undefined;
+
+            const emptyB =
+                bv === null
+                || bv === undefined;
+
+            if (emptyA && emptyB) {
+                return 0;
+            }
+
+            if (emptyA) {
+                return 1;
+            }
+
+            if (emptyB) {
+                return -1;
+            }
+
+            return (
+                Number(av)
+                - Number(bv)
+            ) * direction;
+        }
+    );
+
+    return rows;
+}
+
+
+function metricCard(
+    metricId,
+    metric
+) {
+    const card =
+        document.createElement(
+            "article"
+        );
+
+    card.className =
+        `metric-card ${
+            metricId === "aves_abatidas"
+                ? "metric-card-wide"
+                : ""
+        }`;
+
+    const years =
+        dashboardData.anos;
+
+    const months =
+        dashboardData.meses;
+
+    const rows =
+        rowsFor(
+            metricId,
+            metric,
+            years,
+            months
+        );
+
+    const headYears =
+        years.map(year => `
+            <th>
+                <button
+                    type="button"
+                    class="table-sort-button"
+                    data-sort-metric="${metricId}"
+                    data-sort-key="${year}"
+                >
+                    ${year}
+                    <span class="sort-icon">
+                        ${
+                            sortIcon(
+                                metricId,
+                                String(year)
+                            )
+                        }
+                    </span>
+                </button>
+            </th>
+        `).join("");
+
+    const body =
+        rows.map(row => `
+            <tr>
+                <td class="month-cell">
+                    ${row.monthName}
+                </td>
+
+                ${
+                    years.map(year => {
+                        const value =
+                            row.values[
+                                String(year)
+                            ];
+
+                        const content =
+                            formatValue(
+                                value,
+                                metric
+                            );
+
+                        if (
+                            value === null
+                            || value === undefined
+                        ) {
+                            return `<td>${content}</td>`;
+                        }
+
+                        return `
+                            <td>
+                                <a
+                                    class="metric-value-link"
+                                    href="${
+                                        detailUrl(
+                                            metricId,
+                                            year,
+                                            row.monthNumber
+                                        )
+                                    }"
+                                    title="Abrir detalhamento de ${row.monthName}/${year}"
+                                >
+                                    ${content}
+                                </a>
+                            </td>
+                        `;
+                    }).join("")
+                }
+            </tr>
+        `).join("");
+
+    const totals =
+        years.map(year => `
+            <td>
+                ${
+                    formatValue(
+                        metric.totais?.[
+                            String(year)
+                        ],
+                        metric
+                    )
+                }
+            </td>
+        `).join("");
+
+    card.innerHTML = `
+        <header class="metric-card-header">
+            <div>
+                <h2>${metric.nome}</h2>
+                <p>Mensal por ano</p>
+            </div>
+
+            <div class="card-actions">
+                <button
+                    class="mini-button"
+                    type="button"
+                    data-info-metric="${metricId}"
+                    title="Ver fórmula"
+                >
+                    i
+                </button>
+
+                <a
+                    class="details-button"
+                    href="${detailUrl(metricId)}"
+                >
+                    Detalhes →
+                </a>
+            </div>
+        </header>
+
+        <div class="metric-table-wrapper">
+            <table class="metric-table">
+                <thead>
+                    <tr>
+                        <th class="month-cell">
+                            <button
+                                type="button"
+                                class="table-sort-button table-sort-button-month"
+                                data-sort-metric="${metricId}"
+                                data-sort-key="mes"
+                            >
+                                Mês
+                                <span class="sort-icon">
+                                    ${
+                                        sortIcon(
+                                            metricId,
+                                            "mes"
+                                        )
+                                    }
+                                </span>
+                            </button>
+                        </th>
+
+                        ${headYears}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    ${body}
+
+                    <tr class="total-row">
+                        <td class="month-cell">
+                            Total
+                        </td>
+
+                        ${totals}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    return card;
+}
+
+
+function renderDashboard() {
+    if (!dashboardData) {
+        return;
+    }
+
+    document
+        .getElementById(
+            "ultimaAtualizacao"
+        )
+        .textContent =
+        dashboardData.atualizado_em
+        || "—";
+
+    const container =
+        document.getElementById(
+            "indicadores"
+        );
+
+    container.innerHTML = "";
+
+    ORDEM_INDICADORES.forEach(
+        metricId => {
+            const metric =
+                dashboardData
+                    .indicadores?.[
+                        metricId
+                    ];
+
+            if (metric) {
+                container.appendChild(
+                    metricCard(
+                        metricId,
+                        metric
+                    )
+                );
+            }
+        }
+    );
+
+    document
+        .getElementById(
+            "loadingDashboard"
+        )
+        .classList
+        .add("hidden");
+
+    container
+        .classList
+        .remove("hidden");
+}
+
+
+async function carregarDashboard(
+    initial = false
+) {
+    clearError();
+
+    if (performanceController) {
+        performanceController.abort();
+    }
+
+    performanceController =
+        new AbortController();
+
+    try {
+        const response =
+            await apiGet(
+                APP_CONFIG
+                    .endpoints
+                    .desempenho,
+                filters.values(),
+                {
+                    signal:
+                        performanceController
+                            .signal
+                }
+            );
+
+        dashboardData = response;
+        renderDashboard();
+    }
+    catch (error) {
+        if (
+            error.name ===
+            "AbortError"
+        ) {
+            return;
+        }
+
+        console.error(error);
+        errorMessage(
+            error.message
+            || "Falha ao carregar."
+        );
+    }
+}
+
+
+function abrirFormula(metricId) {
+    const metric =
+        formulasCatalogo[
+            metricId
+        ];
+
+    if (!metric) {
+        return;
+    }
+
+    document
+        .getElementById(
+            "formulaModalTitulo"
+        )
+        .textContent =
+        metric.nome;
+
+    document
+        .getElementById(
+            "formulaModalFormula"
+        )
+        .textContent =
+        metric.formula_exibicao
+        || "Não informada";
+
+    document
+        .getElementById(
+            "formulaModalDescricao"
+        )
+        .textContent =
+        metric.descricao
+        || "";
+
+    document
+        .getElementById(
+            "formulaModalDax"
+        )
+        .textContent =
+        metric.formula_dax
+        || "";
+
+    const ponderacao =
+        document.getElementById(
+            "formulaModalPonderacaoContainer"
+        );
+
+    if (metric.ponderador) {
+        ponderacao
+            .classList
+            .remove("hidden");
+
+        document
+            .getElementById(
+                "formulaModalPonderacao"
+            )
+            .textContent =
+            metric.ponderador;
+    }
+    else {
+        ponderacao
+            .classList
+            .add("hidden");
+    }
+
+    const regra =
+        document.getElementById(
+            "formulaModalRegraContainer"
+        );
+
+    if (metric.regra_adicional) {
+        regra.classList.remove("hidden");
+
+        document
+            .getElementById(
+                "formulaModalRegra"
+            )
+            .textContent =
+            metric
+                .regra_adicional
+                .descricao || "";
+    }
+    else {
+        regra.classList.add("hidden");
+    }
+
+    document
+        .getElementById(
+            "formulaModal"
+        )
+        .classList
+        .remove("hidden");
+}
+
+
+function fecharFormula() {
+    document
+        .getElementById(
+            "formulaModal"
+        )
+        .classList
+        .add("hidden");
+}
+
+
+document
+    .getElementById(
+        "limparFiltros"
+    )
+    .addEventListener(
+        "click",
+        async () => {
+            filters.clear();
+            await filters.loadOptions({
+                preserve: false
+            });
+            carregarDashboard(false);
+        }
+    );
+
+
+document.addEventListener(
+    "click",
+    event => {
+        const sort =
+            event.target.closest(
+                "[data-sort-metric]"
+            );
+
+        if (sort) {
+            toggleSort(
+                sort.dataset.sortMetric,
+                sort.dataset.sortKey
+            );
+
+            return;
+        }
+
+        const info =
+            event.target.closest(
+                "[data-info-metric]"
+            );
+
+        if (info) {
+            abrirFormula(
+                info.dataset.infoMetric
+            );
+        }
+    }
+);
 
 
 document
@@ -119,285 +756,43 @@ document
         fecharFormula
     );
 
-async function carregarCatalogoFormulas() {
-
-    const resposta =
-        await apiGet(
-            "/api/zootecnico/formulas"
-        );
-
-
-    formulasCatalogo = {};
-
-
-    resposta.metricas
-        .forEach(metrica => {
-
-            formulasCatalogo[
-                metrica.id
-            ] = metrica;
-
-        });
-
-}
-
-
-
-function abrirFormula(metricId) {
-
-    const metrica =
-        formulasCatalogo[metricId];
-
-
-    if (!metrica) {
-        return;
-    }
-
-
-    document
-        .getElementById(
-            "formulaModalTitulo"
-        )
-        .textContent =
-        metrica.nome;
-
-
-    document
-        .getElementById(
-            "formulaModalFormula"
-        )
-        .textContent =
-        metrica.formula_exibicao;
-
-
-    document
-        .getElementById(
-            "formulaModalDescricao"
-        )
-        .textContent =
-        metrica.descricao;
-
-
-    const ponderacaoContainer =
-        document.getElementById(
-            "formulaModalPonderacaoContainer"
-        );
-
-
-    if (metrica.ponderador) {
-
-        ponderacaoContainer
-            .classList
-            .remove("hidden");
-
-
-        document
-            .getElementById(
-                "formulaModalPonderacao"
-            )
-            .textContent =
-            metrica.ponderador;
-
-    }
-    else {
-
-        ponderacaoContainer
-            .classList
-            .add("hidden");
-
-    }
-
-
-    const regraContainer =
-        document.getElementById(
-            "formulaModalRegraContainer"
-        );
-
-
-    if (metrica.regra_adicional) {
-
-        regraContainer
-            .classList
-            .remove("hidden");
-
-
-        document
-            .getElementById(
-                "formulaModalRegra"
-            )
-            .textContent =
-            metrica
-                .regra_adicional
-                .descricao;
-
-    }
-    else {
-
-        regraContainer
-            .classList
-            .add("hidden");
-
-    }
-
-
-    document
-        .getElementById(
-            "formulaModal"
-        )
-        .classList
-        .remove("hidden");
-
-}
-
-
-
-function fecharFormula() {
-
-    document
-        .getElementById(
-            "formulaModal"
-        )
-        .classList
-        .add("hidden");
-
-}
-
-async function carregarDashboard() {
-
-    try {
-
-        const resposta =
-            await apiGet(
-                APP_CONFIG.endpoints.resumo
-            );
-
-
-        document
-            .getElementById(
-                "ultimaAtualizacao"
-            )
-            .textContent =
-            `Atualizado em ${resposta.atualizado_em}`;
-
-
-        Object.entries(charts)
-            .forEach(
-                ([metricId, chart]) => {
-
-                    const metric =
-                        resposta.indicadores[
-                            metricId
-                        ];
-
-
-                    if (!metric)
-                        return;
-
-
-                    chart.setOption({
-
-                        tooltip: {
-                            trigger: "axis"
-                        },
-
-
-                        grid: {
-                            left: 45,
-                            right: 15,
-                            top: 20,
-                            bottom: 35
-                        },
-
-
-                        xAxis: {
-                            type: "category",
-                            data: metric.labels
-                        },
-
-
-                        yAxis: {
-                            type: "value"
-                        },
-
-
-                        series: [
-
-                            {
-
-                                type: "bar",
-
-                                data:
-                                    metric.valores,
-
-                                itemStyle: {
-
-                                    color:
-                                        "#7a1726",
-
-                                    borderRadius:
-                                        [6, 6, 0, 0]
-
-                                }
-
-                            }
-
-                        ]
-
-                    });
-
-                }
-            );
-
-
-    }
-    catch (erro) {
-
-        console.error(erro);
-
-        document
-            .getElementById(
-                "ultimaAtualizacao"
-            )
-            .textContent =
-            "API indisponível";
-
-    }
-
-}
-
-
-
-window.addEventListener(
-    "resize",
-    () => {
-
-        Object.values(charts)
-            .forEach(
-                chart =>
-                    chart.resize()
-            );
-
-    }
-);
 
 async function iniciar() {
-
     try {
+        filters.register();
 
-        await carregarCatalogoFormulas();
+        const [
+            formulas
+        ] = await Promise.all([
+            apiGet(
+                APP_CONFIG
+                    .endpoints
+                    .formulas
+            ),
+            filters.loadOptions({
+                preserve: false
+            })
+        ]);
 
-        await carregarDashboard();
+        formulasCatalogo = {};
 
-    }
-    catch (erro) {
-
-        console.error(
-            "Erro ao iniciar dashboard:",
-            erro
+        formulas.metricas.forEach(
+            metric => {
+                formulasCatalogo[
+                    metric.id
+                ] = metric;
+            }
         );
 
+        await carregarDashboard(true);
     }
-
+    catch (error) {
+        console.error(error);
+        errorMessage(
+            error.message
+            || "Falha ao iniciar."
+        );
+    }
 }
 
 

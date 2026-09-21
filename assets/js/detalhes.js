@@ -4,237 +4,494 @@ const params =
     );
 
 
-const indicadorId =
+let metricId =
     params.get("indicador")
-    || "mortalidade";
+    || "gmd";
+
+let metricCatalog = [];
 
 
-const metric =
-    METRICS[indicadorId]
-    || METRICS.mortalidade;
+const DETAIL_FILTERS = [
+    {
+        id: "ano",
+        apiKey: "ano",
+        search: false
+    },
+    {
+        id: "mes",
+        apiKey: "mes",
+        search: false
+    },
+    {
+        id: "produtor",
+        apiKey: "produtor",
+        search: true
+    },
+    {
+        id: "tecnico",
+        apiKey: "tecnico",
+        search: true
+    },
+    {
+        id: "galpao",
+        apiKey: "galpao",
+        search: true
+    }
+];
 
 
-document
-    .getElementById(
-        "tituloDetalhamento"
-    )
-    .textContent =
-    `Detalhamento - ${metric.titulo}`;
+const inheritedKeys = [
+    "status_acerto",
+    "tipo_granja",
+    "modelo",
+    "tipo_linhagem",
+    "linhagem"
+];
 
 
-document
-    .getElementById(
-        "tituloEvolucao"
-    )
-    .textContent =
-    `Evolução de ${metric.titulo}`;
+let detalhesData = null;
+let requestController = null;
 
 
+const filters = new FilterController({
+    fields: DETAIL_FILTERS,
 
-const chartTecnicos =
-    echarts.init(
+    onChange: () => {
+        atualizarUrl();
+        carregarDetalhes(false);
+    },
+
+    includeDependentRefresh: true
+});
+
+
+function inheritedFilters() {
+    const result = {};
+
+    inheritedKeys.forEach(key => {
+        const value =
+            params.get(key);
+
+        if (value) {
+            result[key] = value;
+        }
+    });
+
+    return result;
+}
+
+
+function allFilters() {
+    return {
+        ...inheritedFilters(),
+        ...filters.values()
+    };
+}
+
+
+async function carregarIndicadores() {
+    const response =
+        await apiGet(
+            APP_CONFIG.endpoints.formulas
+        );
+
+    metricCatalog =
+        Array.isArray(response.metricas)
+            ? response.metricas
+            : [];
+
+    const select =
+        document.getElementById(
+            "indicador"
+        );
+
+    select.innerHTML = "";
+
+    metricCatalog.forEach(metric => {
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value = metric.id;
+        option.textContent = metric.nome;
+        option.selected =
+            metric.id === metricId;
+
+        select.appendChild(option);
+    });
+
+    select.value = metricId;
+}
+
+
+function registrarIndicador() {
+    document
+        .getElementById(
+            "indicador"
+        )
+        .addEventListener(
+            "change",
+            () => {
+                metricId =
+                    document
+                        .getElementById(
+                            "indicador"
+                        )
+                        .value;
+
+                atualizarUrl();
+                carregarDetalhes(false);
+            }
+        );
+}
+
+
+function atualizarUrl() {
+    const next =
+        new URLSearchParams();
+
+    next.set(
+        "indicador",
+        metricId
+    );
+
+    Object.entries(
+        allFilters()
+    ).forEach(
+        ([key, value]) => {
+            if (value) {
+                next.set(key, value);
+            }
+        }
+    );
+
+    history.replaceState(
+        null,
+        "",
+        `${location.pathname}?${next.toString()}`
+    );
+}
+
+
+function formatMetric(
+    value,
+    metric
+) {
+    if (
+        value === null
+        || value === undefined
+    ) {
+        return "—";
+    }
+
+    const number = Number(value);
+
+    if (Number.isNaN(number)) {
+        return "—";
+    }
+
+    if (metric.unidade === "aves") {
+        return number.toLocaleString(
+            "pt-BR",
+            {
+                maximumFractionDigits: 0
+            }
+        );
+    }
+
+    const digits =
+        Number.isInteger(
+            metric.casas_decimais
+        )
+            ? metric.casas_decimais
+            : 2;
+
+    return number.toLocaleString(
+        "pt-BR",
+        {
+            minimumFractionDigits: digits,
+            maximumFractionDigits: digits
+        }
+    );
+}
+
+
+function render() {
+    if (!detalhesData) {
+        return;
+    }
+
+    const metric =
+        detalhesData.indicador;
+
+    document
+        .getElementById(
+            "tituloDetalhes"
+        )
+        .textContent =
+        `Detalhamento • ${metric.nome}`;
+
+    document
+        .getElementById(
+            "subtituloDetalhes"
+        )
+        .textContent =
+        "Rankings e evolução usando a mesma fórmula oficial do indicador.";
+
+    document
+        .getElementById(
+            "ultimaAtualizacao"
+        )
+        .textContent =
+        detalhesData.atualizado_em
+        || "—";
+
+    document
+        .getElementById(
+            "kpiNome"
+        )
+        .textContent =
+        metric.nome;
+
+    document
+        .getElementById(
+            "kpiValor"
+        )
+        .textContent =
+        formatMetric(
+            metric.valor,
+            metric
+        );
+
+    document
+        .getElementById(
+            "tituloEvolucao"
+        )
+        .textContent =
+        `Evolução de ${metric.nome}`;
+
+    ZooCharts.ranking(
+        rankingTecnicosChart,
+        detalhesData.ranking_tecnicos,
+        metric.nome
+    );
+
+    ZooCharts.ranking(
+        rankingProdutoresChart,
+        detalhesData.ranking_produtores,
+        metric.nome
+    );
+
+    ZooCharts.evolution(
+        evolucaoChart,
+        detalhesData.evolucao,
+        metric.nome
+    );
+}
+
+
+async function carregarDetalhes(
+    initial = false
+) {
+    if (requestController) {
+        requestController.abort();
+    }
+
+    requestController =
+        new AbortController();
+
+    document
+        .getElementById(
+            "dashboardAtualizando"
+        )
+        .classList
+        .remove("hidden");
+
+    try {
+        detalhesData =
+            await apiGet(
+                APP_CONFIG
+                    .endpoints
+                    .detalhes,
+                {
+                    indicador: metricId,
+                    ...allFilters()
+                },
+                {
+                    signal:
+                        requestController
+                            .signal
+                }
+            );
+
+        render();
+    }
+    catch (error) {
+        if (
+            error.name
+            === "AbortError"
+        ) {
+            return;
+        }
+
+        console.error(error);
+
+        const el =
+            document.getElementById(
+                "mensagemErro"
+            );
+
+        el.textContent =
+            error.message
+            || "Falha ao carregar detalhamento.";
+
+        el.classList.remove("hidden");
+    }
+    finally {
+        document
+            .getElementById(
+                "dashboardAtualizando"
+            )
+            .classList
+            .add("hidden");
+    }
+}
+
+
+const rankingTecnicosChart =
+    ZooCharts.init(
         document.getElementById(
             "rankingTecnicos"
         )
     );
 
 
-const chartProdutores =
-    echarts.init(
+const rankingProdutoresChart =
+    ZooCharts.init(
         document.getElementById(
             "rankingProdutores"
         )
     );
 
 
-const chartEvolucao =
-    echarts.init(
+const evolucaoChart =
+    ZooCharts.init(
         document.getElementById(
-            "evolucao"
+            "evolucaoChart"
         )
     );
 
 
-
-async function carregarDetalhes() {
-
-    const dados =
-        await apiGet(
-            APP_CONFIG.endpoints.detalhes,
-            {
-                indicador:
-                    indicadorId
-            }
+rankingTecnicosChart.on(
+    "click",
+    async paramsChart => {
+        filters.set(
+            "tecnico",
+            paramsChart.name
         );
 
-
-    configurarRanking(
-        chartTecnicos,
-        dados.tecnicos
-    );
-
-
-    configurarRanking(
-        chartProdutores,
-        dados.produtores
-    );
-
-
-    configurarEvolucao(
-        chartEvolucao,
-        dados.evolucao
-    );
-
-}
-
-
-
-function configurarRanking(
-    chart,
-    dados
-) {
-
-    chart.setOption({
-
-        tooltip: {
-            trigger: "axis"
-        },
-
-
-        grid: {
-            left: 150,
-            right: 30,
-            top: 10,
-            bottom: 30
-        },
-
-
-        xAxis: {
-            type: "value"
-        },
-
-
-        yAxis: {
-
-            type: "category",
-
-            inverse: true,
-
-            data:
-                dados.labels
-
-        },
-
-
-        series: [
-
-            {
-
-                type: "bar",
-
-                data:
-                    dados.valores,
-
-                itemStyle: {
-
-                    color:
-                        "#7a1726",
-
-                    borderRadius:
-                        [0, 7, 7, 0]
-
-                }
-
-            }
-
-        ]
-
-    });
-
-}
-
-
-
-function configurarEvolucao(
-    chart,
-    dados
-) {
-
-    chart.setOption({
-
-        tooltip: {
-            trigger: "axis"
-        },
-
-
-        legend: {
-            data:
-                dados.series
-                    .map(x => x.nome)
-        },
-
-
-        grid: {
-            left: 50,
-            right: 20,
-            top: 40,
-            bottom: 40
-        },
-
-
-        xAxis: {
-
-            type: "category",
-
-            data:
-                dados.labels
-
-        },
-
-
-        yAxis: {
-            type: "value"
-        },
-
-
-        series:
-            dados.series.map(
-                serie => ({
-
-                    name:
-                        serie.nome,
-
-                    type:
-                        "line",
-
-                    smooth:
-                        true,
-
-                    data:
-                        serie.valores
-
-                })
-            )
-
-    });
-
-}
-
-
-
-window.addEventListener(
-    "resize",
-    () => {
-
-        chartTecnicos.resize();
-
-        chartProdutores.resize();
-
-        chartEvolucao.resize();
-
+        await filters.loadOptions({
+            preserve: true
+        });
+
+        atualizarUrl();
+        carregarDetalhes(false);
     }
 );
 
 
+rankingProdutoresChart.on(
+    "click",
+    async paramsChart => {
+        filters.set(
+            "produtor",
+            paramsChart.name
+        );
 
-carregarDetalhes();
+        await filters.loadOptions({
+            preserve: true
+        });
+
+        atualizarUrl();
+        carregarDetalhes(false);
+    }
+);
+
+
+document.addEventListener(
+    "charts:theme-refresh",
+    () => {
+        render();
+    }
+);
+
+
+document
+    .getElementById(
+        "limparFiltrosDetalhes"
+    )
+    .addEventListener(
+        "click",
+        async () => {
+            filters.clear();
+
+            await filters.loadOptions({
+                preserve: false
+            });
+
+            atualizarUrl();
+            carregarDetalhes(false);
+        }
+    );
+
+
+async function aplicarParametrosUrl() {
+    DETAIL_FILTERS.forEach(field => {
+        const value =
+            params.get(
+                field.apiKey
+            );
+
+        if (value) {
+            filters.set(
+                field.apiKey,
+                value
+            );
+        }
+    });
+}
+
+
+async function iniciar() {
+    await carregarIndicadores();
+    registrarIndicador();
+    filters.register();
+
+    // Carrega opções respeitando os filtros herdados da primeira página.
+    const originalValues =
+        filters.values;
+
+    filters.values =
+        function () {
+            return {
+                ...inheritedFilters(),
+                ...originalValues.call(this)
+            };
+        };
+
+    await filters.loadOptions({
+        preserve: false
+    });
+
+    await aplicarParametrosUrl();
+
+    await filters.loadOptions({
+        preserve: true
+    });
+
+    await carregarDetalhes(true);
+}
+
+
+iniciar();

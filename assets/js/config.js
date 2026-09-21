@@ -1,5 +1,12 @@
 const APP_CONFIG = {
-    API_URL: "http://127.0.0.1:8000",
+    mode: "static-duckdb-wasm",
+
+    // Arquivo servido pelo próprio GitHub Pages.
+    parquetUrl: "data/base_dinamica.parquet",
+
+    // DuckDB-Wasm roda 100% no navegador.
+    duckdbModuleUrl:
+        "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.30.0/+esm",
 
     endpoints: {
         health: "/api/health",

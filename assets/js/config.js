@@ -1,19 +1,25 @@
 const APP_CONFIG = {
-    mode: "static-duckdb-wasm",
+    mode: "static-hyparquet",
 
-    // Arquivo servido pelo próprio GitHub Pages.
-    parquetUrl: "data/base_dinamica.parquet",
+    parquetUrl:
+        "data/base_dinamica.parquet",
 
-    // DuckDB-Wasm roda 100% no navegador.
-    duckdbModuleUrl:
-        "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.30.0/+esm",
+    // Leitor Parquet puro JavaScript: muito menor que DuckDB-Wasm.
+    hyparquetModuleUrl:
+        "https://cdn.jsdelivr.net/npm/hyparquet/src/hyparquet.min.js",
 
     endpoints: {
-        health: "/api/health",
-        info: "/api/zootecnico/info",
-        formulas: "/api/zootecnico/formulas",
-        filtros: "/api/zootecnico/filtros",
-        desempenho: "/api/zootecnico/desempenho",
-        detalhes: "/api/zootecnico/detalhes"
+        health:
+            "/api/health",
+        info:
+            "/api/zootecnico/info",
+        formulas:
+            "/api/zootecnico/formulas",
+        filtros:
+            "/api/zootecnico/filtros",
+        desempenho:
+            "/api/zootecnico/desempenho",
+        detalhes:
+            "/api/zootecnico/detalhes"
     }
 };

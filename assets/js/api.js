@@ -15,290 +15,457 @@ const BIStatic = (() => {
     ];
 
     const DIMENSOES = {
-        status_acerto: "Status Acerto",
-        tipo_granja: "Tipo de Granja",
-        modelo: "Modelo",
-        produtor: "Produtor",
-        tecnico: "Técnico",
-        linhagem: "Linhagem",
-        galpao: "Galpão.1"
+        status_acerto:
+            "Status Acerto",
+        tipo_granja:
+            "Tipo de Granja",
+        modelo:
+            "Modelo",
+        produtor:
+            "Produtor",
+        tecnico:
+            "Técnico",
+        linhagem:
+            "Linhagem",
+        galpao:
+            "Galpão.1"
     };
 
     let initPromise = null;
-    let duckdb = null;
-    let db = null;
-    let conn = null;
+    let data = [];
     let columns = new Set();
-    let dateColumn = null;
     let updatedAt = "—";
-    let recordCount = 0;
+    let fileBytes = 0;
 
 
-    function normalize(value) {
-        if (typeof value === "bigint") {
-            const number = Number(value);
-            return Number.isSafeInteger(number)
-                ? number
-                : value.toString();
+    function setLoadingStatus(text) {
+        const top =
+            document.querySelector(
+                ".update-meta strong"
+            );
+
+        if (top) {
+            top.textContent = text;
+        }
+    }
+
+
+    function cleanString(value) {
+        if (
+            value === null
+            || value === undefined
+        ) {
+            return "";
         }
 
-        if (value instanceof Date) {
-            return value.toISOString();
+        return String(value).trim();
+    }
+
+
+    function numeric(value) {
+        if (
+            value === null
+            || value === undefined
+            || value === ""
+        ) {
+            return null;
         }
 
         if (
-            value
-            && typeof value === "object"
-            && typeof value.toString === "function"
-            && value.constructor
-            && /Decimal/i.test(value.constructor.name)
+            typeof value
+            === "number"
         ) {
-            const n = Number(value.toString());
-            return Number.isNaN(n)
-                ? value.toString()
-                : n;
+            return Number.isFinite(value)
+                ? value
+                : null;
         }
 
-        return value;
+        if (
+            typeof value
+            === "bigint"
+        ) {
+            const n = Number(value);
+            return Number.isFinite(n)
+                ? n
+                : null;
+        }
+
+        const raw =
+            String(value)
+                .trim();
+
+        if (!raw) {
+            return null;
+        }
+
+        let normalized = raw;
+
+        if (
+            raw.includes(",")
+            && raw.includes(".")
+        ) {
+            normalized =
+                raw
+                    .replaceAll(".", "")
+                    .replace(",", ".");
+        }
+        else if (
+            raw.includes(",")
+        ) {
+            normalized =
+                raw.replace(",", ".");
+        }
+
+        normalized =
+            normalized
+                .replace(/[^\d.+\-eE]/g, "");
+
+        const n =
+            Number(normalized);
+
+        return Number.isFinite(n)
+            ? n
+            : null;
     }
 
 
-    function rows(table) {
-        const fields =
-            table.schema.fields.map(
-                field => field.name
-            );
+    function dateParts(value) {
+        if (
+            value === null
+            || value === undefined
+            || value === ""
+        ) {
+            return null;
+        }
 
-        return table.toArray().map(row => {
-            const result = {};
-
-            fields.forEach(field => {
-                result[field] =
-                    normalize(
-                        row[field]
-                    );
-            });
-
-            return result;
-        });
-    }
-
-
-    function sqlLiteral(value) {
-        return `'${String(value)
-            .replaceAll("'", "''")}'`;
-    }
-
-
-    function qid(value) {
-        return `"${String(value)
-            .replaceAll('"', '""')}"`;
-    }
-
-
-    function detectDateColumn() {
-        for (
-            const candidate
-            of [
-                "Data Abate",
-                "Data de Abate"
-            ]
+        if (
+            value instanceof Date
         ) {
             if (
-                columns.has(candidate)
+                Number.isNaN(
+                    value.getTime()
+                )
             ) {
-                return candidate;
+                return null;
             }
+
+            return {
+                ano:
+                    value
+                        .getUTCFullYear(),
+                mes:
+                    value
+                        .getUTCMonth()
+                    + 1
+            };
         }
 
-        throw new Error(
-            "Não encontrei 'Data Abate' nem 'Data de Abate' no Parquet."
+        if (
+            typeof value
+            === "bigint"
+        ) {
+            let n = value;
+
+            // Ajusta timestamp conforme ordem de grandeza.
+            const abs =
+                n < 0n
+                    ? -n
+                    : n;
+
+            let ms;
+
+            if (
+                abs
+                > 100000000000000000n
+            ) {
+                // nanossegundos
+                ms =
+                    Number(
+                        n
+                        / 1000000n
+                    );
+            }
+            else if (
+                abs
+                > 100000000000000n
+            ) {
+                // microssegundos
+                ms =
+                    Number(
+                        n
+                        / 1000n
+                    );
+            }
+            else {
+                ms =
+                    Number(n);
+            }
+
+            const d =
+                new Date(ms);
+
+            if (
+                Number.isNaN(
+                    d.getTime()
+                )
+            ) {
+                return null;
+            }
+
+            return {
+                ano:
+                    d
+                        .getUTCFullYear(),
+                mes:
+                    d
+                        .getUTCMonth()
+                    + 1
+            };
+        }
+
+        if (
+            typeof value
+            === "number"
+        ) {
+            let ms = value;
+
+            if (
+                Math.abs(ms)
+                > 1e17
+            ) {
+                ms /= 1e6;
+            }
+            else if (
+                Math.abs(ms)
+                > 1e14
+            ) {
+                ms /= 1e3;
+            }
+            else if (
+                Math.abs(ms)
+                < 1e11
+            ) {
+                ms *= 1000;
+            }
+
+            const d =
+                new Date(ms);
+
+            if (
+                !Number.isNaN(
+                    d.getTime()
+                )
+            ) {
+                return {
+                    ano:
+                        d
+                            .getUTCFullYear(),
+                    mes:
+                        d
+                            .getUTCMonth()
+                        + 1
+                };
+            }
+
+            return null;
+        }
+
+        const text =
+            String(value)
+                .trim();
+
+        // dd/mm/yyyy
+        const br =
+            text.match(
+                /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/
+            );
+
+        if (br) {
+            return {
+                ano:
+                    Number(br[3]),
+                mes:
+                    Number(br[2])
+            };
+        }
+
+        // yyyy-mm-dd
+        const iso =
+            text.match(
+                /^(\d{4})-(\d{1,2})-(\d{1,2})/
+            );
+
+        if (iso) {
+            return {
+                ano:
+                    Number(iso[1]),
+                mes:
+                    Number(iso[2])
+            };
+        }
+
+        const d =
+            new Date(text);
+
+        if (
+            Number.isNaN(
+                d.getTime()
+            )
+        ) {
+            return null;
+        }
+
+        return {
+            ano:
+                d
+                    .getUTCFullYear(),
+            mes:
+                d
+                    .getUTCMonth()
+                + 1
+        };
+    }
+
+
+    function prepareRow(row) {
+        const date =
+            dateParts(
+                row[
+                    "Data de Abate"
+                ]
+                ?? row[
+                    "Data Abate"
+                ]
+            );
+
+        row.__ano =
+            date?.ano
+            ?? null;
+
+        row.__mes =
+            date?.mes
+            ?? null;
+
+        const linhagem =
+            cleanString(
+                row.Linhagem
+            );
+
+        row.__tipo_linhagem =
+            linhagem
+                ? (
+                    linhagem.includes("/")
+                        ? "mista"
+                        : "pura"
+                )
+                : "";
+
+        return row;
+    }
+
+
+    function getMetricValue(
+        row,
+        metric
+    ) {
+        return numeric(
+            row[
+                metric.coluna
+            ]
         );
     }
 
 
-    async function init() {
-        if (initPromise) {
-            return initPromise;
+    function aggregateMetric(
+        rows,
+        metric
+    ) {
+        if (
+            metric.tipo_calculo
+            === "soma"
+        ) {
+            let sum = 0;
+            let found = false;
+
+            for (
+                const row
+                of rows
+            ) {
+                const value =
+                    getMetricValue(
+                        row,
+                        metric
+                    );
+
+                if (
+                    value === null
+                ) {
+                    continue;
+                }
+
+                found = true;
+                sum += value;
+            }
+
+            return found
+                ? sum
+                : null;
         }
 
-        initPromise =
-            (async () => {
-                try {
-                    duckdb =
-                        await import(
-                            APP_CONFIG
-                                .duckdbModuleUrl
-                        );
+        if (
+            metric.tipo_calculo
+            === "media_ponderada"
+        ) {
+            let weighted = 0;
+            let weightTotal = 0;
 
-                    const bundles =
-                        duckdb
-                            .getJsDelivrBundles();
-
-                    const bundle =
-                        await duckdb
-                            .selectBundle(
-                                bundles
-                            );
-
-                    const workerUrl =
-                        URL.createObjectURL(
-                            new Blob(
-                                [
-                                    `importScripts("${bundle.mainWorker}");`
-                                ],
-                                {
-                                    type:
-                                        "text/javascript"
-                                }
-                            )
-                        );
-
-                    const worker =
-                        new Worker(
-                            workerUrl
-                        );
-
-                    const logger =
-                        new duckdb
-                            .ConsoleLogger(
-                                duckdb
-                                    .LogLevel
-                                    ?.WARNING
-                            );
-
-                    db =
-                        new duckdb
-                            .AsyncDuckDB(
-                                logger,
-                                worker
-                            );
-
-                    await db.instantiate(
-                        bundle.mainModule,
-                        bundle.pthreadWorker
+            for (
+                const row
+                of rows
+            ) {
+                const value =
+                    getMetricValue(
+                        row,
+                        metric
                     );
 
-                    URL.revokeObjectURL(
-                        workerUrl
+                const weight =
+                    numeric(
+                        row[
+                            metric.ponderador
+                        ]
                     );
 
-                    const parquetResponse =
-                        await fetch(
-                            APP_CONFIG
-                                .parquetUrl,
-                            {
-                                cache:
-                                    "no-cache"
-                            }
-                        );
-
-                    if (
-                        !parquetResponse.ok
-                    ) {
-                        throw new Error(
-                            `Não foi possível baixar ${APP_CONFIG.parquetUrl} (${parquetResponse.status}).`
-                        );
-                    }
-
-                    const lastModified =
-                        parquetResponse.headers.get(
-                            "last-modified"
-                        );
-
-                    if (lastModified) {
-                        updatedAt =
-                            new Date(
-                                lastModified
-                            )
-                                .toLocaleString(
-                                    "pt-BR"
-                                );
-                    }
-
-                    const parquetBuffer =
-                        new Uint8Array(
-                            await parquetResponse
-                                .arrayBuffer()
-                        );
-
-                    await db.registerFileBuffer(
-                        "base_dinamica.parquet",
-                        parquetBuffer
-                    );
-
-                    conn =
-                        await db.connect();
-
-                    await conn.query(`
-                        CREATE OR REPLACE VIEW base_dinamica AS
-                        SELECT *
-                        FROM read_parquet(
-                            'base_dinamica.parquet'
-                        )
-                    `);
-
-                    const schemaTable =
-                        await conn.query(`
-                            SELECT *
-                            FROM base_dinamica
-                            LIMIT 0
-                        `);
-
-                    columns =
-                        new Set(
-                            schemaTable
-                                .schema
-                                .fields
-                                .map(
-                                    field =>
-                                        field.name
-                                )
-                        );
-
-                    dateColumn =
-                        detectDateColumn();
-
-                    const countTable =
-                        await conn.query(`
-                            SELECT COUNT(*) AS qtd
-                            FROM base_dinamica
-                        `);
-
-                    const countRows =
-                        rows(countTable);
-
-                    recordCount =
-                        Number(
-                            countRows[0]?.qtd
-                            ?? 0
-                        );
-
-                    if (
-                        updatedAt === "—"
-                    ) {
-                        updatedAt =
-                            "arquivo publicado";
-                    }
-
-                    return true;
+                if (
+                    value === null
+                    || weight === null
+                    || weight === 0
+                ) {
+                    continue;
                 }
-                catch (error) {
-                    initPromise = null;
-                    throw error;
-                }
-            })();
 
-        return initPromise;
+                weighted +=
+                    value * weight;
+
+                weightTotal +=
+                    weight;
+            }
+
+            return weightTotal
+                ? weighted
+                    / weightTotal
+                : null;
+        }
+
+        return null;
     }
 
 
-    function buildWhere(
+    function matches(
+        row,
         filtros = {},
         excluir = null
     ) {
-        const conditions = [];
-
         for (
             const [
                 key,
@@ -314,28 +481,28 @@ const BIStatic = (() => {
                 continue;
             }
 
-            const value =
+            const filterValue =
                 filtros[key];
 
             if (
-                value === null
-                || value === undefined
-                || value === ""
+                filterValue === null
+                || filterValue === undefined
+                || filterValue === ""
             ) {
                 continue;
             }
 
             if (
-                !columns.has(column)
+                cleanString(
+                    row[column]
+                )
+                !==
+                cleanString(
+                    filterValue
+                )
             ) {
-                continue;
+                return false;
             }
-
-            conditions.push(`
-                CAST(${qid(column)} AS VARCHAR)
-                =
-                ${sqlLiteral(value)}
-            `);
         }
 
         if (
@@ -347,60 +514,14 @@ const BIStatic = (() => {
                     .tipo_linhagem;
 
             if (
-                tipo === "mista"
+                tipo
+                && row
+                    .__tipo_linhagem
+                    !== tipo
             ) {
-                conditions.push(`
-                    ${qid("Linhagem")}
-                    IS NOT NULL
-
-                    AND
-                    TRIM(
-                        CAST(
-                            ${qid("Linhagem")}
-                            AS VARCHAR
-                        )
-                    ) <> ''
-
-                    AND
-                    STRPOS(
-                        CAST(
-                            ${qid("Linhagem")}
-                            AS VARCHAR
-                        ),
-                        '/'
-                    ) > 0
-                `);
-            }
-
-            if (
-                tipo === "pura"
-            ) {
-                conditions.push(`
-                    ${qid("Linhagem")}
-                    IS NOT NULL
-
-                    AND
-                    TRIM(
-                        CAST(
-                            ${qid("Linhagem")}
-                            AS VARCHAR
-                        )
-                    ) <> ''
-
-                    AND
-                    STRPOS(
-                        CAST(
-                            ${qid("Linhagem")}
-                            AS VARCHAR
-                        ),
-                        '/'
-                    ) = 0
-                `);
+                return false;
             }
         }
-
-        const dateExpr =
-            `TRY_CAST(${qid(dateColumn)} AS TIMESTAMP)`;
 
         if (
             excluir !== "ano"
@@ -408,18 +529,13 @@ const BIStatic = (() => {
             && filtros.ano !== undefined
             && filtros.ano !== ""
         ) {
-            const year =
-                Number.parseInt(
-                    filtros.ano,
-                    10
-                );
-
             if (
-                Number.isFinite(year)
+                row.__ano
+                !== Number(
+                    filtros.ano
+                )
             ) {
-                conditions.push(
-                    `YEAR(${dateExpr}) = ${year}`
-                );
+                return false;
             }
         }
 
@@ -429,54 +545,249 @@ const BIStatic = (() => {
             && filtros.mes !== undefined
             && filtros.mes !== ""
         ) {
-            const month =
-                Number.parseInt(
-                    filtros.mes,
-                    10
-                );
-
             if (
-                Number.isFinite(month)
+                row.__mes
+                !== Number(
+                    filtros.mes
+                )
             ) {
-                conditions.push(
-                    `MONTH(${dateExpr}) = ${month}`
-                );
+                return false;
             }
         }
 
-        if (
-            conditions.length === 0
-        ) {
-            return "";
-        }
+        return true;
+    }
 
-        return (
-            " WHERE "
-            + conditions.join(
-                " AND "
-            )
+
+    function filteredRows(
+        filtros = {},
+        excluir = null
+    ) {
+        return data.filter(
+            row =>
+                matches(
+                    row,
+                    filtros,
+                    excluir
+                )
         );
     }
 
 
-    async function query(sql) {
-        await init();
+    function uniqueSorted(
+        rows,
+        column
+    ) {
+        const set =
+            new Set();
 
-        const table =
-            await conn.query(sql);
+        for (
+            const row
+            of rows
+        ) {
+            const value =
+                cleanString(
+                    row[column]
+                );
 
-        return rows(table);
+            if (value) {
+                set.add(value);
+            }
+        }
+
+        return [
+            ...set
+        ]
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    a.localeCompare(
+                        b,
+                        "pt-BR",
+                        {
+                            sensitivity:
+                                "base",
+                            numeric:
+                                true
+                        }
+                    )
+            );
+    }
+
+
+    async function init() {
+        if (initPromise) {
+            return initPromise;
+        }
+
+        initPromise =
+            (async () => {
+                const started =
+                    performance.now();
+
+                try {
+                    setLoadingStatus(
+                        "Baixando base..."
+                    );
+
+                    const [
+                        hyparquet,
+                        response
+                    ] =
+                        await Promise.all([
+                            import(
+                                APP_CONFIG
+                                    .hyparquetModuleUrl
+                            ),
+                            fetch(
+                                APP_CONFIG
+                                    .parquetUrl,
+                                {
+                                    cache:
+                                        "force-cache"
+                                }
+                            )
+                        ]);
+
+                    if (
+                        !response.ok
+                    ) {
+                        throw new Error(
+                            `Não foi possível baixar o Parquet (${response.status}).`
+                        );
+                    }
+
+                    const lastModified =
+                        response
+                            .headers
+                            .get(
+                                "last-modified"
+                            );
+
+                    if (
+                        lastModified
+                    ) {
+                        updatedAt =
+                            new Date(
+                                lastModified
+                            )
+                                .toLocaleString(
+                                    "pt-BR"
+                                );
+                    }
+
+                    setLoadingStatus(
+                        "Lendo base..."
+                    );
+
+                    const buffer =
+                        await response
+                            .arrayBuffer();
+
+                    fileBytes =
+                        buffer.byteLength;
+
+                    const raw =
+                        await hyparquet
+                            .parquetReadObjects({
+                                file:
+                                    buffer
+                            });
+
+                    setLoadingStatus(
+                        "Preparando dados..."
+                    );
+
+                    data =
+                        raw.map(
+                            prepareRow
+                        );
+
+                    columns =
+                        new Set(
+                            data[0]
+                                ? Object.keys(
+                                    data[0]
+                                )
+                                : []
+                        );
+
+                    if (
+                        data.length === 0
+                    ) {
+                        throw new Error(
+                            "O Parquet foi carregado, mas não possui registros."
+                        );
+                    }
+
+                    const required =
+                        [
+                            "Produtor",
+                            "Tipo de Granja",
+                            "Modelo",
+                            "Técnico",
+                            "Linhagem",
+                            "Aves Abatidas",
+                            "Data de Abate"
+                        ];
+
+                    const missing =
+                        required.filter(
+                            col =>
+                                !columns
+                                    .has(col)
+                        );
+
+                    if (
+                        missing.length
+                    ) {
+                        throw new Error(
+                            "Colunas não encontradas no Parquet: "
+                            + missing.join(", ")
+                        );
+                    }
+
+                    const elapsed =
+                        Math.round(
+                            performance.now()
+                            - started
+                        );
+
+                    console.info(
+                        `[BI] ${data.length.toLocaleString("pt-BR")} registros carregados em ${elapsed} ms.`
+                    );
+
+                    setLoadingStatus(
+                        updatedAt === "—"
+                            ? "Base carregada"
+                            : updatedAt
+                    );
+
+                    return true;
+                }
+                catch (error) {
+                    initPromise = null;
+
+                    setLoadingStatus(
+                        "Erro ao carregar"
+                    );
+
+                    throw error;
+                }
+            })();
+
+        return initPromise;
     }
 
 
     async function formulas() {
         return {
             metricas:
-                ORDEM_INDICADORES
-                    .map(
-                        id =>
-                            METRICAS[id]
-                    )
+                Object.values(
+                    METRICAS
+                )
         };
     }
 
@@ -490,11 +801,11 @@ const BIStatic = (() => {
             atualizado_em:
                 updatedAt,
             registros:
-                recordCount,
-            coluna_calendario:
-                dateColumn,
+                data.length,
+            tamanho_bytes:
+                fileBytes,
             modo:
-                "DuckDB-Wasm no navegador"
+                "Hyparquet no navegador"
         };
     }
 
@@ -504,7 +815,7 @@ const BIStatic = (() => {
     ) {
         await init();
 
-        const resposta = {};
+        const response = {};
 
         for (
             const [
@@ -515,212 +826,220 @@ const BIStatic = (() => {
                 DIMENSOES
             )
         ) {
-            if (
-                !columns.has(column)
-            ) {
-                resposta[key] = [];
-                continue;
-            }
-
-            const where =
-                buildWhere(
+            const rows =
+                filteredRows(
                     filtrosAtuais,
                     key
                 );
 
-            const extra =
-                where
-                    ? " AND "
-                    : " WHERE ";
-
-            const result =
-                await query(`
-                    SELECT DISTINCT
-                        CAST(
-                            ${qid(column)}
-                            AS VARCHAR
-                        ) AS valor
-                    FROM base_dinamica
-                    ${where}
-                    ${extra}
-                        ${qid(column)}
-                        IS NOT NULL
-                    AND
-                        TRIM(
-                            CAST(
-                                ${qid(column)}
-                                AS VARCHAR
-                            )
-                        ) <> ''
-                    ORDER BY valor
-                `);
-
-            resposta[key] =
-                result.map(
-                    row =>
-                        row.valor
+            response[key] =
+                uniqueSorted(
+                    rows,
+                    column
                 );
         }
 
-        if (
-            columns.has(
-                "Linhagem"
-            )
-        ) {
-            const where =
-                buildWhere(
+        {
+            const rows =
+                filteredRows(
                     filtrosAtuais,
                     "tipo_linhagem"
                 );
 
-            const extra =
-                where
-                    ? " AND "
-                    : " WHERE ";
+            const types =
+                new Set();
 
-            const result =
-                await query(`
-                    SELECT DISTINCT
-                        CASE
-                            WHEN STRPOS(
-                                CAST(
-                                    ${qid("Linhagem")}
-                                    AS VARCHAR
-                                ),
-                                '/'
-                            ) > 0
-                                THEN 'mista'
-                            ELSE 'pura'
-                        END AS valor
-                    FROM base_dinamica
-                    ${where}
-                    ${extra}
-                        ${qid("Linhagem")}
-                        IS NOT NULL
-                    AND
-                        TRIM(
-                            CAST(
-                                ${qid("Linhagem")}
-                                AS VARCHAR
-                            )
-                        ) <> ''
-                    ORDER BY valor
-                `);
+            for (
+                const row
+                of rows
+            ) {
+                if (
+                    row
+                        .__tipo_linhagem
+                ) {
+                    types.add(
+                        row
+                            .__tipo_linhagem
+                    );
+                }
+            }
 
-            resposta
+            response
                 .tipo_linhagem =
-                result.map(
-                    row => ({
-                        valor:
-                            row.valor,
-                        nome:
-                            row.valor
-                            === "mista"
-                                ? "Mista"
-                                : "Pura"
-                    })
-                );
-        }
-        else {
-            resposta
-                .tipo_linhagem = [];
-        }
-
-        const dateExpr =
-            `TRY_CAST(${qid(dateColumn)} AS TIMESTAMP)`;
-
-        {
-            const where =
-                buildWhere(
-                    filtrosAtuais,
-                    "ano"
-                );
-
-            const extra =
-                where
-                    ? " AND "
-                    : " WHERE ";
-
-            const result =
-                await query(`
-                    SELECT DISTINCT
-                        YEAR(
-                            ${dateExpr}
-                        ) AS ano
-                    FROM base_dinamica
-                    ${where}
-                    ${extra}
-                        ${dateExpr}
-                        IS NOT NULL
-                    ORDER BY ano DESC
-                `);
-
-            resposta.ano =
-                result
+                [
+                    "pura",
+                    "mista"
+                ]
                     .filter(
-                        row =>
-                            row.ano
-                            !== null
+                        type =>
+                            types
+                                .has(type)
                     )
                     .map(
-                        row =>
-                            Number(
-                                row.ano
-                            )
+                        type => ({
+                            valor:
+                                type,
+                            nome:
+                                type
+                                === "mista"
+                                    ? "Mista"
+                                    : "Pura"
+                        })
                     );
         }
 
         {
-            const where =
-                buildWhere(
+            const rows =
+                filteredRows(
+                    filtrosAtuais,
+                    "ano"
+                );
+
+            response.ano =
+                [
+                    ...new Set(
+                        rows
+                            .map(
+                                row =>
+                                    row
+                                        .__ano
+                            )
+                            .filter(
+                                value =>
+                                    Number
+                                        .isFinite(
+                                            value
+                                        )
+                            )
+                    )
+                ]
+                    .sort(
+                        (
+                            a,
+                            b
+                        ) =>
+                            b - a
+                    );
+        }
+
+        {
+            const rows =
+                filteredRows(
                     filtrosAtuais,
                     "mes"
                 );
 
-            const extra =
-                where
-                    ? " AND "
-                    : " WHERE ";
-
-            const result =
-                await query(`
-                    SELECT DISTINCT
-                        MONTH(
-                            ${dateExpr}
-                        ) AS mes
-                    FROM base_dinamica
-                    ${where}
-                    ${extra}
-                        ${dateExpr}
-                        IS NOT NULL
-                    ORDER BY mes
-                `);
-
-            resposta.mes =
-                result
-                    .filter(
-                        row =>
-                            row.mes
-                            !== null
+            response.mes =
+                [
+                    ...new Set(
+                        rows
+                            .map(
+                                row =>
+                                    row
+                                        .__mes
+                            )
+                            .filter(
+                                value =>
+                                    value >= 1
+                                    && value <= 12
+                            )
                     )
-                    .map(row => {
-                        const month =
-                            Number(
-                                row.mes
-                            );
-
-                        return {
+                ]
+                    .sort(
+                        (
+                            a,
+                            b
+                        ) =>
+                            a - b
+                    )
+                    .map(
+                        month => ({
                             valor:
                                 month,
                             nome:
                                 MESES[
                                     month - 1
                                 ]
-                        };
-                    });
+                        })
+                    );
         }
 
-        return resposta;
+        return response;
+    }
+
+
+    function groupByYearMonth(
+        rows
+    ) {
+        const map =
+            new Map();
+
+        for (
+            const row
+            of rows
+        ) {
+            if (
+                !row.__ano
+                || !row.__mes
+            ) {
+                continue;
+            }
+
+            const key =
+                `${row.__ano}-${row.__mes}`;
+
+            if (
+                !map.has(key)
+            ) {
+                map.set(
+                    key,
+                    []
+                );
+            }
+
+            map
+                .get(key)
+                .push(row);
+        }
+
+        return map;
+    }
+
+
+    function groupByYear(
+        rows
+    ) {
+        const map =
+            new Map();
+
+        for (
+            const row
+            of rows
+        ) {
+            if (
+                !row.__ano
+            ) {
+                continue;
+            }
+
+            const key =
+                row.__ano;
+
+            if (
+                !map.has(key)
+            ) {
+                map.set(
+                    key,
+                    []
+                );
+            }
+
+            map
+                .get(key)
+                .push(row);
+        }
+
+        return map;
     }
 
 
@@ -729,106 +1048,45 @@ const BIStatic = (() => {
     ) {
         await init();
 
-        for (
-            const metricId
-            of ORDEM_INDICADORES
-        ) {
-            const metric =
-                METRICAS[
-                    metricId
-                ];
-
-            if (
-                !columns.has(
-                    metric.coluna
-                )
-            ) {
-                throw new Error(
-                    `Coluna de métrica não encontrada no Parquet: ${metric.coluna}`
-                );
-            }
-        }
-
-        const where =
-            buildWhere(
+        const rows =
+            filteredRows(
                 filtrosAtuais
             );
 
-        const dateExpr =
-            `TRY_CAST(${qid(dateColumn)} AS TIMESTAMP)`;
-
-        const extra =
-            where
-                ? " AND "
-                : " WHERE ";
-
-        const metricExpressions =
-            ORDEM_INDICADORES
-                .map(
-                    metricId =>
-                        `${sqlMetrica(metricId)} AS ${qid(metricId)}`
-                )
-                .join(",\n");
-
-        const mensal =
-            await query(`
-                SELECT
-                    YEAR(
-                        ${dateExpr}
-                    ) AS ano,
-
-                    MONTH(
-                        ${dateExpr}
-                    ) AS mes_numero,
-
-                    ${metricExpressions}
-                FROM base_dinamica
-                ${where}
-                ${extra}
-                    ${dateExpr}
-                    IS NOT NULL
-                GROUP BY 1, 2
-                ORDER BY 1, 2
-            `);
-
-        const totals =
-            await query(`
-                SELECT
-                    YEAR(
-                        ${dateExpr}
-                    ) AS ano,
-
-                    ${metricExpressions}
-                FROM base_dinamica
-                ${where}
-                ${extra}
-                    ${dateExpr}
-                    IS NOT NULL
-                GROUP BY 1
-                ORDER BY 1
-            `);
-
-        const anos =
+        const years =
             [
                 ...new Set(
-                    mensal
-                        .filter(
-                            row =>
-                                row.ano
-                                !== null
-                        )
+                    rows
                         .map(
                             row =>
-                                Number(
-                                    row.ano
-                                )
+                                row.__ano
+                        )
+                        .filter(
+                            value =>
+                                Number
+                                    .isFinite(
+                                        value
+                                    )
                         )
                 )
             ]
                 .sort(
-                    (a, b) =>
+                    (
+                        a,
+                        b
+                    ) =>
                         a - b
                 );
+
+        const byYearMonth =
+            groupByYearMonth(
+                rows
+            );
+
+        const byYear =
+            groupByYear(
+                rows
+            );
 
         const indicadores = {};
 
@@ -842,74 +1100,61 @@ const BIStatic = (() => {
                 ];
 
             const porAno = {};
+            const totais = {};
 
-            anos.forEach(year => {
+            for (
+                const year
+                of years
+            ) {
+                const values =
+                    Array(12)
+                        .fill(null);
+
+                for (
+                    let month = 1;
+                    month <= 12;
+                    month++
+                ) {
+                    const group =
+                        byYearMonth
+                            .get(
+                                `${year}-${month}`
+                            )
+                        || [];
+
+                    if (
+                        group.length
+                    ) {
+                        values[
+                            month - 1
+                        ] =
+                            aggregateMetric(
+                                group,
+                                metric
+                            );
+                    }
+                }
+
                 porAno[
                     String(year)
                 ] =
-                    Array(12)
-                        .fill(null);
-            });
+                    values;
 
-            mensal.forEach(row => {
-                if (
-                    row.ano === null
-                    || row.mes_numero
-                        === null
-                ) {
-                    return;
-                }
+                const yearRows =
+                    byYear
+                        .get(year)
+                    || [];
 
-                const year =
-                    String(
-                        Number(
-                            row.ano
-                        )
-                    );
-
-                const month =
-                    Number(
-                        row
-                            .mes_numero
-                    );
-
-                if (
-                    porAno[year]
-                ) {
-                    porAno[year][
-                        month - 1
-                    ] =
-                        row[
-                            metricId
-                        ];
-                }
-            });
-
-            const totalByYear = {};
-
-            anos.forEach(year => {
-                totalByYear[
+                totais[
                     String(year)
-                ] = null;
-            });
-
-            totals.forEach(row => {
-                if (
-                    row.ano
-                    !== null
-                ) {
-                    totalByYear[
-                        String(
-                            Number(
-                                row.ano
-                            )
+                ] =
+                    yearRows.length
+                        ? aggregateMetric(
+                            yearRows,
+                            metric
                         )
-                    ] =
-                        row[
-                            metricId
-                        ];
-                }
-            });
+                        : null;
+            }
 
             indicadores[
                 metricId
@@ -927,8 +1172,7 @@ const BIStatic = (() => {
                     ?? 2,
                 por_ano:
                     porAno,
-                totais:
-                    totalByYear
+                totais
             };
         }
 
@@ -937,7 +1181,8 @@ const BIStatic = (() => {
                 "base_dinamica.parquet",
             atualizado_em:
                 updatedAt,
-            anos,
+            anos:
+                years,
             meses:
                 MESES.map(
                     (
@@ -951,6 +1196,87 @@ const BIStatic = (() => {
                 ),
             indicadores
         };
+    }
+
+
+    function ranking(
+        rows,
+        column,
+        metric,
+        limit = 20
+    ) {
+        const groups =
+            new Map();
+
+        for (
+            const row
+            of rows
+        ) {
+            const name =
+                cleanString(
+                    row[column]
+                );
+
+            if (!name) {
+                continue;
+            }
+
+            if (
+                !groups.has(name)
+            ) {
+                groups.set(
+                    name,
+                    []
+                );
+            }
+
+            groups
+                .get(name)
+                .push(row);
+        }
+
+        return [
+            ...groups
+                .entries()
+        ]
+            .map(
+                (
+                    [
+                        nome,
+                        group
+                    ]
+                ) => ({
+                    nome,
+                    valor:
+                        aggregateMetric(
+                            group,
+                            metric
+                        )
+                })
+            )
+            .filter(
+                item =>
+                    item.valor
+                    !== null
+                    && Number
+                        .isFinite(
+                            Number(
+                                item.valor
+                            )
+                        )
+            )
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    Number(b.valor)
+                    - Number(a.valor)
+            )
+            .slice(
+                0,
+                limit
+            );
     }
 
 
@@ -981,197 +1307,101 @@ const BIStatic = (() => {
 
         delete filtros.indicador;
 
-        const where =
-            buildWhere(
+        const rows =
+            filteredRows(
                 filtros
             );
 
-        const expr =
-            sqlMetrica(
-                indicador
-            );
-
-        const valueRows =
-            await query(`
-                SELECT
-                    ${expr}
-                    AS valor
-                FROM base_dinamica
-                ${where}
-            `);
-
         const valor =
-            valueRows[0]
-                ?.valor
-            ?? null;
-
-        async function ranking(
-            column,
-            limit = 20
-        ) {
-            if (
-                !columns.has(
-                    column
-                )
-            ) {
-                return [];
-            }
-
-            const extra =
-                where
-                    ? " AND "
-                    : " WHERE ";
-
-            const result =
-                await query(`
-                    SELECT
-                        CAST(
-                            ${qid(column)}
-                            AS VARCHAR
-                        ) AS nome,
-
-                        ${expr}
-                        AS valor
-
-                    FROM base_dinamica
-
-                    ${where}
-
-                    ${extra}
-                        ${qid(column)}
-                        IS NOT NULL
-
-                    AND
-                        TRIM(
-                            CAST(
-                                ${qid(column)}
-                                AS VARCHAR
-                            )
-                        ) <> ''
-
-                    GROUP BY 1
-
-                    HAVING
-                        ${expr}
-                        IS NOT NULL
-
-                    ORDER BY
-                        valor DESC
-                        NULLS LAST
-
-                    LIMIT ${Number(limit)}
-                `);
-
-            return result.map(
-                row => ({
-                    nome:
-                        row.nome,
-                    valor:
-                        row.valor
-                })
+            aggregateMetric(
+                rows,
+                metric
             );
-        }
 
-        const [
-            rankingTecnicos,
-            rankingProdutores
-        ] =
-            await Promise.all([
-                ranking(
-                    "Técnico"
-                ),
-                ranking(
-                    "Produtor"
-                )
-            ]);
+        const rankingTecnicos =
+            ranking(
+                rows,
+                "Técnico",
+                metric
+            );
 
-        const dateExpr =
-            `TRY_CAST(${qid(dateColumn)} AS TIMESTAMP)`;
+        const rankingProdutores =
+            ranking(
+                rows,
+                "Produtor",
+                metric
+            );
 
-        const extra =
-            where
-                ? " AND "
-                : " WHERE ";
-
-        const evolutionRows =
-            await query(`
-                SELECT
-                    YEAR(
-                        ${dateExpr}
-                    ) AS ano,
-
-                    MONTH(
-                        ${dateExpr}
-                    ) AS mes,
-
-                    ${expr}
-                    AS valor
-
-                FROM base_dinamica
-
-                ${where}
-
-                ${extra}
-                    ${dateExpr}
-                    IS NOT NULL
-
-                GROUP BY 1, 2
-                ORDER BY 1, 2
-            `);
+        const byYearMonth =
+            groupByYearMonth(
+                rows
+            );
 
         const years =
             [
                 ...new Set(
-                    evolutionRows
-                        .filter(
-                            row =>
-                                row.ano
-                                !== null
-                        )
+                    rows
                         .map(
                             row =>
-                                Number(
-                                    row.ano
-                                )
+                                row.__ano
+                        )
+                        .filter(
+                            value =>
+                                Number
+                                    .isFinite(
+                                        value
+                                    )
                         )
                 )
             ]
                 .sort(
-                    (a, b) =>
+                    (
+                        a,
+                        b
+                    ) =>
                         a - b
                 );
 
         const series =
-            years.map(year => {
-                const values =
-                    Array(12)
-                        .fill(null);
+            years.map(
+                year => {
+                    const values =
+                        Array(12)
+                            .fill(null);
 
-                evolutionRows
-                    .forEach(row => {
+                    for (
+                        let month = 1;
+                        month <= 12;
+                        month++
+                    ) {
+                        const group =
+                            byYearMonth
+                                .get(
+                                    `${year}-${month}`
+                                )
+                            || [];
+
                         if (
-                            Number(
-                                row.ano
-                            ) === year
-                            && row.mes
-                                !== null
+                            group.length
                         ) {
                             values[
-                                Number(
-                                    row.mes
-                                ) - 1
+                                month - 1
                             ] =
-                                row.valor;
+                                aggregateMetric(
+                                    group,
+                                    metric
+                                );
                         }
-                    });
+                    }
 
-                return {
-                    ano:
-                        year,
-                    valores:
-                        values
-                };
-            });
+                    return {
+                        ano:
+                            year,
+                        valores:
+                            values
+                    };
+                }
+            );
 
         return {
             arquivo:
@@ -1219,15 +1449,15 @@ const BIStatic = (() => {
         endpoint,
         params = {}
     ) {
-        await init();
-
         switch (endpoint) {
             case "/api/health":
+                await init();
+
                 return {
                     status:
                         "ok",
                     mode:
-                        "static-duckdb-wasm"
+                        APP_CONFIG.mode
                 };
 
             case "/api/zootecnico/info":
@@ -1253,7 +1483,7 @@ const BIStatic = (() => {
 
             default:
                 throw new Error(
-                    `Endpoint local não reconhecido: ${endpoint}`
+                    `Rota local não reconhecida: ${endpoint}`
                 );
         }
     }

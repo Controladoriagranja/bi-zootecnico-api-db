@@ -221,21 +221,6 @@ SUM(base_dinamica_tratado[Aves Abatidas])`,
 };
 
 
-const ORDEM_INDICADORES = [
-    "iep",
-    "ca",
-    "cac",
-    "gmd",
-    "mortalidade",
-    "idade",
-    "peso_medio",
-    "vazio",
-    "morte_transporte",
-    "cac_ref",
-    "aves_abatidas"
-];
-
-
 function sqlNumero(coluna) {
     const c =
         `"${String(coluna).replaceAll('"', '""')}"`;

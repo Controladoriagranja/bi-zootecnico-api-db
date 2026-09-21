@@ -37,7 +37,7 @@ const FIRST_FILTERS = [
 ];
 
 
-const ORDEM_INDICADORES = [
+const DASHBOARD_ORDEM_INDICADORES = [
     "iep",
     "ca",
     "cac",

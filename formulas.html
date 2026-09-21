@@ -2,27 +2,85 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link rel="icon" href="data:,">
+
     <title>Fórmulas - Desempenho Zootécnico</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/css/app.css">
+    <script>
+        (() => {
+            const saved =
+                localStorage.getItem(
+                    "bi-zootecnico-theme"
+                );
+
+            if (saved) {
+                document.documentElement.dataset.theme =
+                    saved;
+            }
+        })();
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="assets/css/app.css"
+    >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css">
 </head>
+
 <body>
-<div class="dashboard-container">
-    <header class="dashboard-header">
+
+<div class="app-shell">
+
+    <header class="page-header">
         <div>
-            <a href="index.html" class="breadcrumb">← Desempenho Zootécnico</a>
+            <a
+                href="index.html"
+                class="back-link"
+            >
+                ← Desempenho Zootécnico
+            </a>
+
+            <div class="eyebrow">
+                Catálogo de métricas
+            </div>
+
             <h1>Fórmulas</h1>
-            <p>Dicionário dos indicadores utilizados no Desempenho Zootécnico.</p>
+
+            <p>
+                Definições oficiais utilizadas no dashboard.
+            </p>
+        </div>
+
+        <div class="header-toolbar">
+            <button
+                class="icon-button"
+                type="button"
+                data-theme-toggle
+                aria-label="Alternar tema"
+            >
+                <span data-theme-icon>☾</span>
+            </button>
         </div>
     </header>
 
-    <section id="formulaContainer" class="formula-grid"></section>
+
+    <section
+        id="formulaContainer"
+        class="formula-grid"
+    ></section>
+
 </div>
+
 
 <script src="assets/js/config.js"></script>
 <script src="assets/js/api.js"></script>
+<script src="assets/js/theme.js"></script>
 <script src="assets/js/formulas.js"></script>
+
 </body>
 </html>

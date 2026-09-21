@@ -1,95 +1,261 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
 
+    <link rel="icon" href="data:,">
+
     <title>Detalhamento Zootécnico</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        (() => {
+            const saved =
+                localStorage.getItem(
+                    "bi-zootecnico-theme"
+                );
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js">
+            if (saved) {
+                document.documentElement.dataset.theme =
+                    saved;
+            }
+        })();
     </script>
 
     <link
         rel="stylesheet"
         href="assets/css/app.css"
     >
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css">
 </head>
 
 <body>
 
-<div class="dashboard-container">
+<div class="app-shell">
 
-    <header class="dashboard-header">
+    <header class="page-header details-header">
 
         <div>
-
             <a
+                id="voltarDashboard"
                 href="index.html"
-                class="breadcrumb"
+                class="back-link"
             >
                 ← Desempenho Zootécnico
             </a>
 
-            <h1 id="tituloDetalhamento">
+            <div class="eyebrow">
+                Detalhamento
+            </div>
+
+            <h1 id="tituloDetalhes">
                 Detalhamento Zootécnico
             </h1>
+
+            <p id="subtituloDetalhes">
+                Análise detalhada do indicador.
+            </p>
+        </div>
+
+        <div class="header-toolbar">
+
+            <button
+                class="icon-button"
+                type="button"
+                data-theme-toggle
+                aria-label="Alternar tema"
+                title="Alternar tema"
+            >
+                <span data-theme-icon>☾</span>
+            </button>
+
+            <div class="update-meta">
+                <span>Última atualização</span>
+                <strong id="ultimaAtualizacao">
+                    Carregando...
+                </strong>
+            </div>
 
         </div>
 
     </header>
 
 
-    <section class="detail-grid">
+    <section class="card filter-card">
 
-        <article class="chart-card">
+        <div class="filter-card-top">
+            <div>
+                <h2>Contexto da análise</h2>
+                <p>
+                    Ano, mês e galpão existem somente no detalhamento.
+                </p>
+            </div>
 
-            <h2>
-                Ranking de Técnicos
-            </h2>
+            <button
+                id="limparFiltrosDetalhes"
+                class="button button-ghost-danger"
+                type="button"
+            >
+                Limpar detalhes
+            </button>
+        </div>
+
+        <div class="filters-grid details-filters details-filters-with-indicator">
+
+            <label class="filter-field">
+                <span>Indicador</span>
+                <select id="indicador">
+                    <option value="">Carregando...</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Ano</span>
+                <select id="ano">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Mês</span>
+                <select id="mes">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Produtor</span>
+                <select id="produtor">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Técnico</span>
+                <select id="tecnico">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Galpão</span>
+                <select id="galpao">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+        </div>
+
+    </section>
+
+
+    <div
+        id="mensagemErro"
+        class="alert alert-error hidden"
+    ></div>
+
+
+    <section class="details-top-grid">
+
+        <article class="card metric-summary-card">
+            <div class="card-heading-row">
+                <div>
+                    <div class="card-kicker">
+                        Indicador selecionado
+                    </div>
+
+                    <h2 id="kpiNome">
+                        —
+                    </h2>
+                </div>
+
+                <a
+                    href="formulas.html"
+                    class="mini-link"
+                >
+                    Fórmula
+                </a>
+            </div>
 
             <div
-                id="rankingTecnicos"
-                class="chart"
-            ></div>
+                id="kpiValor"
+                class="metric-summary-value"
+            >
+                —
+            </div>
 
+            <div
+                id="kpiContexto"
+                class="metric-summary-caption"
+            >
+                Contexto atual dos filtros
+            </div>
         </article>
 
 
-        <article class="chart-card">
+        <article class="card chart-card">
+            <div class="card-heading-row">
+                <div>
+                    <div class="card-kicker">
+                        Ranking
+                    </div>
 
-            <h2>
-                Ranking de Produtores
-            </h2>
+                    <h2>Técnicos</h2>
+                </div>
+            </div>
+
+            <div
+                id="rankingTecnicos"
+                class="chart chart-ranking"
+            ></div>
+        </article>
+
+
+        <article class="card chart-card">
+            <div class="card-heading-row">
+                <div>
+                    <div class="card-kicker">
+                        Ranking
+                    </div>
+
+                    <h2>Produtores</h2>
+                </div>
+            </div>
 
             <div
                 id="rankingProdutores"
-                class="chart"
+                class="chart chart-ranking"
             ></div>
-
         </article>
 
     </section>
 
 
-    <article class="chart-card chart-card-large">
+    <article class="card chart-card evolution-card">
 
-        <h2 id="tituloEvolucao">
-            Evolução
-        </h2>
+        <div class="card-heading-row">
+            <div>
+                <div class="card-kicker">
+                    Evolução
+                </div>
+
+                <h2 id="tituloEvolucao">
+                    Evolução mensal
+                </h2>
+
+                <p>
+                    Passe o mouse para ver os valores.
+                    No celular, deslize horizontalmente sobre o gráfico.
+                </p>
+            </div>
+        </div>
 
         <div
-            id="evolucao"
-            class="chart chart-large"
+            id="evolucaoChart"
+            class="chart chart-evolution"
         ></div>
 
     </article>
@@ -97,9 +263,23 @@
 </div>
 
 
+<div
+    id="dashboardAtualizando"
+    class="updating-pill hidden"
+>
+    <span class="spinner"></span>
+    Atualizando...
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
 <script src="assets/js/config.js"></script>
-<script src="assets/js/metrics.js"></script>
 <script src="assets/js/api.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/filters.js"></script>
+<script src="assets/js/charts.js"></script>
 <script src="assets/js/detalhes.js"></script>
 
 </body>

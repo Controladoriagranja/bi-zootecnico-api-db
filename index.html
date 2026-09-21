@@ -2,88 +2,271 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link rel="icon" href="data:,">
+
     <title>Desempenho Zootécnico</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/css/app.css">
-</head>
-<body>
-<div class="dashboard-container">
+    <script>
+        (() => {
+            const saved =
+                localStorage.getItem(
+                    "bi-zootecnico-theme"
+                );
 
-    <header class="dashboard-header">
+            if (saved) {
+                document.documentElement.dataset.theme =
+                    saved;
+            }
+        })();
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="assets/css/app.css"
+    >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css">
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <header class="page-header">
         <div>
-            <span class="breadcrumb">Dashboard Zootécnico</span>
-            <h1>Desempenho Zootécnico</h1>
-            <p>Acompanhamento dos principais indicadores produtivos</p>
+            <div class="eyebrow">
+                Dashboard Zootécnico
+            </div>
+
+            <h1>
+                Desempenho Zootécnico
+            </h1>
+
+            <p>
+                Acompanhamento dos principais indicadores produtivos
+            </p>
         </div>
 
-        <div class="header-actions">
-            <a href="formulas.html" class="formula-page-link">Fórmulas</a>
-            <div id="ultimaAtualizacao" class="last-update">Carregando...</div>
+        <div class="header-toolbar">
+
+            <a
+                href="formulas.html"
+                class="icon-button icon-button-label"
+            >
+                <span>ƒx</span>
+                Fórmulas
+            </a>
+
+            <button
+                class="icon-button"
+                type="button"
+                data-theme-toggle
+                aria-label="Alternar tema"
+                title="Alternar tema"
+            >
+                <span data-theme-icon>☾</span>
+            </button>
+
+            <div class="update-meta">
+                <span>Última atualização</span>
+                <strong id="ultimaAtualizacao">
+                    Carregando...
+                </strong>
+            </div>
+
         </div>
     </header>
 
-    <section class="filter-card">
-        <div class="filters-grid">
-            <select id="status"><option value="">Status Acerto - Todos</option></select>
-            <select id="tipoGranja"><option value="">Tipo de Granja - Todos</option></select>
-            <select id="modelo"><option value="">Modelo - Todos</option></select>
-            <select id="produtor"><option value="">Produtor - Todos</option></select>
-            <select id="tecnico"><option value="">Técnico - Todos</option></select>
-            <select id="mistLinha"><option value="">Mist Linha - Todos</option></select>
-            <button id="limparFiltros">Limpar filtros</button>
+
+    <section class="card filter-card">
+
+        <div class="filter-card-top">
+            <div>
+                <h2>Filtros</h2>
+                <p>
+                    Todos os indicadores compartilham o mesmo contexto.
+                </p>
+            </div>
+
+            <button
+                id="limparFiltros"
+                class="button button-ghost-danger"
+                type="button"
+            >
+                Limpar filtros
+            </button>
         </div>
+
+        <div class="filters-grid first-page-filters">
+
+            <label class="filter-field">
+                <span>Status Acerto</span>
+                <select id="status">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Tipo de Granja</span>
+                <select id="tipoGranja">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Modelo</span>
+                <select id="modelo">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Produtor</span>
+                <select id="produtor">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Técnico</span>
+                <select id="tecnico">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Tipo de Linhagem</span>
+                <select id="tipoLinhagem">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+            <label class="filter-field">
+                <span>Linhagem</span>
+                <select id="linhagem">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+
+        </div>
+
     </section>
 
-    <div id="mensagemErro" class="error-banner hidden"></div>
 
-    <main id="indicadores" class="indicator-grid"></main>
+    <div
+        id="mensagemErro"
+        class="alert alert-error hidden"
+    ></div>
+
+
+    <section
+        id="loadingDashboard"
+        class="dashboard-grid"
+    >
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+    </section>
+
+
+    <main
+        id="indicadores"
+        class="dashboard-grid hidden"
+    ></main>
+
 </div>
 
-<div id="formulaModal" class="formula-modal hidden">
-    <div id="formulaModalBackdrop" class="formula-modal-backdrop"></div>
 
-    <div class="formula-modal-content">
-        <div class="formula-modal-header">
+<div
+    id="formulaModal"
+    class="dialog-layer hidden"
+>
+    <div
+        id="formulaModalBackdrop"
+        class="dialog-backdrop"
+    ></div>
+
+    <section
+        class="dialog-card"
+        role="dialog"
+        aria-modal="true"
+    >
+        <header class="dialog-header">
             <div>
-                <span class="breadcrumb">Fórmula do indicador</span>
-                <h2 id="formulaModalTitulo">Indicador</h2>
-            </div>
-            <button id="formulaModalFechar" class="formula-modal-close">×</button>
-        </div>
+                <div class="eyebrow">
+                    Fórmula do indicador
+                </div>
 
-        <div class="formula-modal-body">
-            <div class="formula-modal-section">
+                <h2 id="formulaModalTitulo">
+                    Indicador
+                </h2>
+            </div>
+
+            <button
+                id="formulaModalFechar"
+                class="icon-button"
+                type="button"
+            >
+                ×
+            </button>
+        </header>
+
+        <div class="dialog-body">
+
+            <div class="info-block">
                 <span>Fórmula</span>
-                <div id="formulaModalFormula" class="formula-readable"></div>
+                <div
+                    id="formulaModalFormula"
+                    class="code-inline"
+                ></div>
             </div>
 
-            <div class="formula-modal-section">
+            <div class="info-block">
                 <span>Descrição</span>
                 <p id="formulaModalDescricao"></p>
             </div>
 
-            <div id="formulaModalPonderacaoContainer" class="formula-modal-section">
+            <div
+                id="formulaModalPonderacaoContainer"
+                class="info-block"
+            >
                 <span>Ponderação</span>
                 <p id="formulaModalPonderacao"></p>
             </div>
 
-            <div id="formulaModalRegraContainer" class="formula-warning hidden">
+            <div
+                id="formulaModalRegraContainer"
+                class="notice hidden"
+            >
                 <strong>Regra adicional</strong>
                 <p id="formulaModalRegra"></p>
             </div>
 
-            <details class="formula-code">
-                <summary>Ver fórmula DAX original</summary>
+            <details class="code-details">
+                <summary>
+                    Ver DAX original
+                </summary>
+
                 <pre><code id="formulaModalDax"></code></pre>
             </details>
+
         </div>
-    </div>
+    </section>
 </div>
+
 
 <script src="assets/js/config.js"></script>
 <script src="assets/js/api.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/filters.js"></script>
 <script src="assets/js/dashboard.js"></script>
+
 </body>
 </html>

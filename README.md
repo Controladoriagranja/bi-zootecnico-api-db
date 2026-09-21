@@ -1,79 +1,57 @@
-# BI Zootécnico V6 — GitHub Pages / DuckDB-Wasm
+# BI Zootécnico V6.1 FAST — GitHub Pages
 
-Esta versão é 100% estática e NÃO precisa de:
-- FastAPI
-- Python rodando
-- Render
-- Cloudflare Tunnel
-- instalação no Windows
+Esta versão corrige o travamento da V6 e reduz radicalmente o peso inicial.
 
-## Estrutura
+## O que foi corrigido
 
-index.html
-detalhes.html
-formulas.html
-assets/
-data/
-  base_dinamica.parquet
+1. Existia conflito JavaScript entre `metrics.js` e `dashboard.js`:
+   ambos declaravam `const ORDEM_INDICADORES`.
+   Isso podia interromper o carregamento da aplicação.
 
-O navegador baixa o Parquet e executa as consultas com DuckDB-Wasm.
+2. A V6 usava DuckDB-Wasm.
+   O motor do DuckDB-Wasm precisa baixar um arquivo WASM de dezenas de MB
+   antes mesmo de consultar o Parquet.
 
-## Como publicar no GitHub sem Git instalado
+3. A V6.1 usa **Hyparquet**, leitor Parquet puro JavaScript e muito menor.
+   Para esta base de aproximadamente 3,2 MB, é mais adequado para teste web/mobile.
 
-1. Extraia o ZIP.
-2. No repositório do GitHub, use **Add file > Upload files**.
-3. Envie TODO o conteúdo desta pasta mantendo as pastas:
-   - index.html
-   - detalhes.html
-   - formulas.html
-   - assets/
-   - data/
-4. Faça Commit changes.
-5. Vá em **Settings > Pages**.
-6. Use:
-   - Deploy from a branch
-   - main
-   - / (root)
-7. Aguarde o GitHub Pages publicar.
-8. Abra a URL do Pages no PC e no celular.
+## Publicação no GitHub
 
-## Atualizar os dados depois
+Substitua TODO o conteúdo do repositório pelos arquivos desta versão,
+ou no mínimo substitua:
 
-Para um novo teste, basta substituir no GitHub:
+- index.html
+- detalhes.html
+- formulas.html
+- assets/js/config.js
+- assets/js/metrics.js
+- assets/js/api.js
+- assets/js/dashboard.js
+- assets/js/detalhes.js
+- assets/js/filters.js
+- assets/js/charts.js
+- assets/js/theme.js
+- assets/js/formulas.js
+- assets/css/app.css
+- data/base_dinamica.parquet
 
-data/base_dinamica.parquet
+Mantenha `data/base_dinamica.parquet` exatamente nesse caminho.
 
-mantendo exatamente esse nome.
+Depois aguarde o GitHub Pages publicar e faça Ctrl+F5.
 
-## Regra de linhagem
+No celular, abra a mesma URL HTTPS.
 
-- contém "/" => Mista
-- não contém "/" => Pura
+## Funcionamento
 
-O filtro "Tipo de Linhagem" restringe o filtro "Linhagem".
+GitHub Pages
+ -> baixa ~3,2 MB do Parquet
+ -> Hyparquet lê a base no navegador
+ -> JavaScript calcula filtros e indicadores
+ -> ECharts desenha os gráficos
 
-## Atenção de segurança
+Não precisa de Python, FastAPI, Render ou túnel.
 
-O arquivo `data/base_dinamica.parquet` fica publicamente baixável quando o GitHub Pages/repositório é público.
-Esta arquitetura é indicada para protótipo/teste, não para dados confidenciais em produção.
+## Segurança
 
-## Dependências web
-
-Carregadas por CDN:
-- DuckDB-Wasm 1.30.0
-- ECharts 5
-- Geist Variable Font
-
-## Problemas comuns
-
-### Tela fica em "Carregando..."
-Abra F12 > Console. Os erros mais prováveis são:
-- arquivo `data/base_dinamica.parquet` não foi enviado;
-- CDN bloqueada pela rede;
-- nome de uma coluna do Parquet mudou.
-
-### No celular não carrega
-Confirme que está abrindo a URL HTTPS do GitHub Pages e não um arquivo local.
-
-### Dados antigos após substituir o Parquet
-Faça atualização forçada no navegador ou abra em guia anônima.
+O Parquet publicado em GitHub Pages público também é público.
+Use esta arquitetura para protótipo/teste, não como desenho definitivo para dados sensíveis.

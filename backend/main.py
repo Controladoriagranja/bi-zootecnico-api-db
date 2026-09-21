@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+from metrics import METRICAS
 
 import duckdb
 
@@ -194,3 +195,16 @@ def contagem():
 
     finally:
         con.close()
+
+
+# ============================================================
+# CHAMAR METRICAS
+# ============================================================
+@app.get("/api/zootecnico/formulas")
+def formulas():
+
+    return {
+        "metricas": list(
+            METRICAS.values()
+        )
+    }

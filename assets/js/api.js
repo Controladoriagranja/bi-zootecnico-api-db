@@ -1092,7 +1092,7 @@ const BIStatic = (() => {
 
         for (
             const metricId
-            of ORDEM_INDICADORES
+            of BI_METRIC_ORDER
         ) {
             const metric =
                 METRICAS[

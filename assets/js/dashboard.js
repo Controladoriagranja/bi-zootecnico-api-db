@@ -37,19 +37,7 @@ const FIRST_FILTERS = [
 ];
 
 
-const DASHBOARD_ORDEM_INDICADORES = [
-    "iep",
-    "ca",
-    "cac",
-    "gmd",
-    "mortalidade",
-    "idade",
-    "peso_medio",
-    "vazio",
-    "morte_transporte",
-    "cac_ref",
-    "aves_abatidas"
-];
+
 
 
 let formulasCatalogo = {};
@@ -508,7 +496,7 @@ function renderDashboard() {
 
     container.innerHTML = "";
 
-    ORDEM_INDICADORES.forEach(
+    BI_METRIC_ORDER.forEach(
         metricId => {
             const metric =
                 dashboardData

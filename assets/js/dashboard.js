@@ -24,12 +24,13 @@ function criarCard(metric) {
 
             <div class="card-actions">
 
-                <button
-                    class="info-button"
-                    title="${metric.descricao}"
-                >
-                    i
-                </button>
+               <button
+    class="info-button"
+    data-metric-id="${metric.id}"
+    aria-label="Ver fórmula de ${metric.titulo}"
+>
+    i
+</button>
 
                 <a
                     class="details-link"

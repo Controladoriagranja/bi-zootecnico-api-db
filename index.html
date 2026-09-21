@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Desempenho Zootécnico</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ECharts -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js">
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="assets/css/app.css"
+    >
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <header class="dashboard-header">
+
+        <div>
+            <span class="breadcrumb">
+                Dashboard Zootécnico
+            </span>
+
+            <h1>
+                Desempenho Zootécnico
+            </h1>
+
+            <p>
+                Acompanhamento dos principais indicadores produtivos
+            </p>
+        </div>
+
+        <div id="ultimaAtualizacao" class="last-update">
+            Carregando...
+        </div>
+
+    </header>
+
+
+    <!-- FILTROS -->
+
+    <section class="filter-card">
+
+        <div class="filters-grid">
+
+            <select id="status">
+                <option value="">Status Acerto - Todos</option>
+            </select>
+
+            <select id="tipoGranja">
+                <option value="">Tipo de Granja - Todos</option>
+            </select>
+
+            <select id="modelo">
+                <option value="">Modelo - Todos</option>
+            </select>
+
+            <select id="produtor">
+                <option value="">Produtor - Todos</option>
+            </select>
+
+            <select id="tecnico">
+                <option value="">Técnico - Todos</option>
+            </select>
+
+            <select id="mistLinha">
+                <option value="">Mist Linha - Todos</option>
+            </select>
+
+            <button id="limparFiltros">
+                Limpar filtros
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- INDICADORES -->
+
+    <main
+        id="indicadores"
+        class="indicator-grid"
+    >
+    </main>
+
+</div>
+
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/metrics.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/dashboard.js"></script>
+
+</body>
+</html>

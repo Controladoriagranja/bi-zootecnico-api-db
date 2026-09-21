@@ -521,7 +521,46 @@ body {
     font-size: 12px;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
 
+
+.formula-page-link {
+    padding: 8px 12px;
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    color: var(--primary);
+
+    text-decoration: none;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+
+.formula-page-link:hover {
+    background: #f8f6f2;
+}
+
+
+@media (max-width: 768px) {
+
+    .header-actions {
+        width: 100%;
+
+        justify-content: space-between;
+    }
+
+}
 .formula-warning {
     margin: 14px 0;
 

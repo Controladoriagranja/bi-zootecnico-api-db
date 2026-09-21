@@ -6,7 +6,7 @@ const APP_CONFIG = {
 
     // Leitor Parquet puro JavaScript: muito menor que DuckDB-Wasm.
     hyparquetModuleUrl:
-        "https://cdn.jsdelivr.net/npm/hyparquet/src/hyparquet.min.js",
+        "https://cdn.jsdelivr.net/npm/hyparquet@1.31.1/+esm",
 
     endpoints: {
         health:

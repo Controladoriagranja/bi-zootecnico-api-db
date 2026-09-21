@@ -1,28 +1,79 @@
-# BI Zootécnico - Shadcn-like V5
+# BI Zootécnico V6 — GitHub Pages / DuckDB-Wasm
 
-Versão visual inspirada na organização do shadcn-echarts-demo, usando as cores da Granja Brasília.
+Esta versão é 100% estática e NÃO precisa de:
+- FastAPI
+- Python rodando
+- Render
+- Cloudflare Tunnel
+- instalação no Windows
 
-## Mudanças principais
+## Estrutura
 
-- A primeira tela mantém somente os 6 filtros atuais.
-- Ano, Mês e Galpão existem apenas em `detalhes.html`.
-- `Detalhes →` reativado em cada indicador.
-- Clique em uma célula mensal leva ano + mês para o detalhamento.
-- Filtros dependentes/facetados no backend.
-- Selecionar Produtor restringe Técnico e Galpão; selecionar Técnico restringe Produtor e Galpão; e vice-versa.
-- Ranking de Técnicos e Produtores com ECharts.
-- Evolução mensal com barras arredondadas.
-- Clique em uma barra de ranking aplica cross-filter.
-- Tema claro/escuro persistido no navegador.
-- Fórmulas continuam centralizadas no backend `metrics.py`.
-- Frontend separado em `theme.js`, `filters.js`, `charts.js`, `dashboard.js` e `detalhes.js`.
+index.html
+detalhes.html
+formulas.html
+assets/
+data/
+  base_dinamica.parquet
 
-## Importante
+O navegador baixa o Parquet e executa as consultas com DuckDB-Wasm.
 
-Não substitua seu `backend/metrics.py` nem seu `backend/config.py`.
+## Como publicar no GitHub sem Git instalado
 
-O campo de Galpão usado nesta versão é:
-`Galpão.1`
+1. Extraia o ZIP.
+2. No repositório do GitHub, use **Add file > Upload files**.
+3. Envie TODO o conteúdo desta pasta mantendo as pastas:
+   - index.html
+   - detalhes.html
+   - formulas.html
+   - assets/
+   - data/
+4. Faça Commit changes.
+5. Vá em **Settings > Pages**.
+6. Use:
+   - Deploy from a branch
+   - main
+   - / (root)
+7. Aguarde o GitHub Pages publicar.
+8. Abra a URL do Pages no PC e no celular.
 
-Se o campo correto no negócio for outro, altere somente:
-`DIMENSOES["galpao"]` em `backend/main.py`.
+## Atualizar os dados depois
+
+Para um novo teste, basta substituir no GitHub:
+
+data/base_dinamica.parquet
+
+mantendo exatamente esse nome.
+
+## Regra de linhagem
+
+- contém "/" => Mista
+- não contém "/" => Pura
+
+O filtro "Tipo de Linhagem" restringe o filtro "Linhagem".
+
+## Atenção de segurança
+
+O arquivo `data/base_dinamica.parquet` fica publicamente baixável quando o GitHub Pages/repositório é público.
+Esta arquitetura é indicada para protótipo/teste, não para dados confidenciais em produção.
+
+## Dependências web
+
+Carregadas por CDN:
+- DuckDB-Wasm 1.30.0
+- ECharts 5
+- Geist Variable Font
+
+## Problemas comuns
+
+### Tela fica em "Carregando..."
+Abra F12 > Console. Os erros mais prováveis são:
+- arquivo `data/base_dinamica.parquet` não foi enviado;
+- CDN bloqueada pela rede;
+- nome de uma coluna do Parquet mudou.
+
+### No celular não carrega
+Confirme que está abrindo a URL HTTPS do GitHub Pages e não um arquivo local.
+
+### Dados antigos após substituir o Parquet
+Faça atualização forçada no navegador ou abra em guia anônima.

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Detalhamento Zootécnico</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js">
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="assets/css/app.css"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <header class="dashboard-header">
+
+        <div>
+
+            <a
+                href="index.html"
+                class="breadcrumb"
+            >
+                ← Desempenho Zootécnico
+            </a>
+
+            <h1 id="tituloDetalhamento">
+                Detalhamento Zootécnico
+            </h1>
+
+        </div>
+
+    </header>
+
+
+    <section class="detail-grid">
+
+        <article class="chart-card">
+
+            <h2>
+                Ranking de Técnicos
+            </h2>
+
+            <div
+                id="rankingTecnicos"
+                class="chart"
+            ></div>
+
+        </article>
+
+
+        <article class="chart-card">
+
+            <h2>
+                Ranking de Produtores
+            </h2>
+
+            <div
+                id="rankingProdutores"
+                class="chart"
+            ></div>
+
+        </article>
+
+    </section>
+
+
+    <article class="chart-card chart-card-large">
+
+        <h2 id="tituloEvolucao">
+            Evolução
+        </h2>
+
+        <div
+            id="evolucao"
+            class="chart chart-large"
+        ></div>
+
+    </article>
+
+</div>
+
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/metrics.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/detalhes.js"></script>
+
+</body>
+</html>

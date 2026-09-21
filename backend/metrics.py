@@ -222,18 +222,39 @@ ORDEM_INDICADORES = [
 ]
 
 
+def sql_numero(coluna: str) -> str:
+    """
+    Converte uma coluna para DOUBLE de forma tolerante.
+
+    Algumas colunas do Parquet, como Vazio, estão armazenadas como
+    VARCHAR mesmo contendo números. Também aceita decimal com vírgula.
+    """
+
+    return (
+        f"COALESCE("
+        f"TRY_CAST(\"{coluna}\" AS DOUBLE), "
+        f"TRY_CAST(REPLACE(TRIM(CAST(\"{coluna}\" AS VARCHAR)), ',', '.') AS DOUBLE)"
+        f")"
+    )
+
+
 def sql_metrica(metric_id: str) -> str:
     metrica = METRICAS[metric_id]
     coluna = metrica["coluna"]
+    valor = sql_numero(coluna)
 
     if metrica["tipo_calculo"] == "soma":
-        return f'SUM("{coluna}")'
+        return f"SUM({valor})"
 
     if metrica["tipo_calculo"] == "media_ponderada":
         ponderador = metrica["ponderador"]
+        peso = sql_numero(ponderador)
+
         return (
-            f'SUM("{coluna}" * "{ponderador}") '
-            f'/ NULLIF(SUM("{ponderador}"), 0)'
+            f"SUM(({valor}) * ({peso})) "
+            f"/ NULLIF(SUM({peso}), 0)"
         )
 
-    raise ValueError(f"Tipo de cálculo não suportado: {metrica['tipo_calculo']}")
+    raise ValueError(
+        f"Tipo de cálculo não suportado: {metrica['tipo_calculo']}"
+    )

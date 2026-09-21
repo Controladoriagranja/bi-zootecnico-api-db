@@ -208,3 +208,67 @@ def formulas():
             METRICAS.values()
         )
     }
+    @app.get("/api/zootecnico/filtros")
+def filtros():
+
+    caminho = validar_parquet()
+    sql_path = caminho_sql(caminho)
+
+    con = duckdb.connect()
+
+    try:
+
+        def valores_distintos(coluna):
+
+            resultado = con.execute(
+                f"""
+                SELECT DISTINCT "{coluna}"
+                FROM read_parquet('{sql_path}')
+                WHERE "{coluna}" IS NOT NULL
+                  AND TRIM(CAST("{coluna}" AS VARCHAR)) <> ''
+                ORDER BY 1
+                """
+            ).fetchall()
+
+            return [
+                linha[0]
+                for linha in resultado
+            ]
+
+
+        return {
+
+            "status_acerto":
+                valores_distintos(
+                    "Status Acerto"
+                ),
+
+            "tipo_granja":
+                valores_distintos(
+                    "Tipo de Granja"
+                ),
+
+            "modelo":
+                valores_distintos(
+                    "Modelo"
+                ),
+
+            "produtor":
+                valores_distintos(
+                    "Produtor"
+                ),
+
+            "tecnico":
+                valores_distintos(
+                    "Técnico"
+                ),
+
+            "mist_linha":
+                valores_distintos(
+                    "Mist Linha"
+                )
+
+        }
+
+    finally:
+        con.close()

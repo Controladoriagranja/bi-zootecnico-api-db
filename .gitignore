@@ -11,3 +11,4 @@ __pycache__/
 backend/data/
 
 .vscode/
+backend/.venv/

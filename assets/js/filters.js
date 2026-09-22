@@ -219,23 +219,31 @@ class FilterController {
         return state;
     }
 
-    normalizeOptions(field, raw) {
-        if (
-            field.apiKey === "mes"
-            || field.apiKey === "tipo_linhagem"
-        ) {
-            return raw.map(item => ({
-                value: String(item.valor),
-                label: String(item.nome)
+normalizeOptions(field, raw) {
+    if (field.apiKey === "ano") {
+        return raw
+            .filter(item => Number(item) >= 2023)
+            .map(item => ({
+                value: String(item),
+                label: String(item)
             }));
-        }
+    }
 
+    if (
+        field.apiKey === "mes"
+        || field.apiKey === "tipo_linhagem"
+    ) {
         return raw.map(item => ({
-            value: String(item),
-            label: String(item)
+            value: String(item.valor),
+            label: String(item.nome)
         }));
     }
 
+    return raw.map(item => ({
+        value: String(item),
+        label: String(item)
+    }));
+}
     renderMultiOptions(field, options, selected) {
         const state = this.buildMulti(field);
 

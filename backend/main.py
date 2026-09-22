@@ -545,7 +545,7 @@ def filtros(
             FROM "{CACHE_TABLE}"
             {where_ano}
             {'AND' if where_ano else 'WHERE'} {data_expr} IS NOT NULL
-                AND YEAR({data_expr}) >= {ANO_MINIMO}
+                AND YEAR({data_expr}) >= 2023
             ORDER BY ano DESC
             """,
             params_ano,
@@ -556,7 +556,16 @@ def filtros(
         for linha in anos
         if (
             linha[0] is not None
-            and int(linha[0]) >= ANO_MINIMO
+            and int(linha[0]) >= 2023
+        )
+    ]
+
+    resposta["ano"] = [
+        int(linha[0])
+        for linha in anos
+        if (
+            linha[0] is not None
+            and int(linha[0]) >= 2023
         )
     ]
 

@@ -1,3 +1,6 @@
+DOCUMENTO HISTÓRICO — V5.2. Para instalação e funcionamento atuais, consulte README.md.
+Não use as instruções de substituição abaixo como guia da versão atual.
+
 BI Zootécnico V5.2
 
 ALTERAÇÕES
@@ -25,3 +28,4 @@ NÃO SUBSTITUIR
 backend/metrics.py
 backend/config.py
 backend/.venv
+

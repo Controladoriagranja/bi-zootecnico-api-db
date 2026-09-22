@@ -1,3 +1,6 @@
+DOCUMENTO HISTÓRICO. Consulte README.md para a estrutura e configuração atuais.
+As pastas, o nome do Parquet e a URL abaixo pertencem a um pacote anterior.
+
 BI ZOOTECNICO - GITHUB PAGES + CLOUDFLARE TUNNEL
 =================================================
 
@@ -38,3 +41,4 @@ PROXIMO PASSO FUTURO
 Quando houver SQL local, o HTML continua igual.
 A troca acontece apenas na API: em vez de DuckDB + Parquet,
 a FastAPI consulta o banco SQL local.
+

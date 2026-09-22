@@ -41,4 +41,3 @@ PROXIMO PASSO FUTURO
 Quando houver SQL local, o HTML continua igual.
 A troca acontece apenas na API: em vez de DuckDB + Parquet,
 a FastAPI consulta o banco SQL local.
-

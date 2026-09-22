@@ -202,4 +202,3 @@ Nesta revisão documental, os contratos foram conferidos por leitura do código.
 | Relatórios em `tests/` | Evidência histórica, não substituem testes reproduzíveis. |
 
 Esta atualização altera apenas documentação; dependências, configuração e código legado não foram removidos.
-

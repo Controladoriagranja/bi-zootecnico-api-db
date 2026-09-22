@@ -28,4 +28,3 @@ NÃO SUBSTITUIR
 backend/metrics.py
 backend/config.py
 backend/.venv
-

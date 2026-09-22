@@ -1,0 +1,40 @@
+BI ZOOTECNICO - GITHUB PAGES + CLOUDFLARE TUNNEL
+=================================================
+
+O pacote esta separado em duas partes:
+
+1) github-pages/
+   Publicar no repositorio do GitHub Pages.
+   Nao contem Parquet.
+   O navegador consulta somente a API.
+
+2) api-local/
+   Rodar na maquina da empresa.
+   A FastAPI usa DuckDB para consultar teste.parquet localmente.
+
+URL DO TUNNEL ATUAL
+-------------------
+O arquivo github-pages/assets/js/config.js esta configurado para:
+https://advert-critics-rest-checked.trycloudflare.com
+
+Como esse e um Quick Tunnel, a URL pode mudar quando o cloudflared reiniciar.
+Se mudar, altere somente APP_CONFIG.API_URL em config.js.
+
+FLUXO
+-----
+GitHub Pages
+    -> Cloudflare Tunnel
+        -> FastAPI local
+            -> DuckDB
+                -> teste.parquet
+
+PARA PUBLICAR NO GITHUB
+-----------------------
+Publique SOMENTE o conteudo da pasta github-pages/.
+Nao publique api-local/, teste.parquet, .env ou credenciais.
+
+PROXIMO PASSO FUTURO
+--------------------
+Quando houver SQL local, o HTML continua igual.
+A troca acontece apenas na API: em vez de DuckDB + Parquet,
+a FastAPI consulta o banco SQL local.

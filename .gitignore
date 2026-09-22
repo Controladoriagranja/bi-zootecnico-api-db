@@ -1,14 +1,5 @@
+*.parquet
 .env
-
-venv/
 .venv/
-
 __pycache__/
 *.pyc
-
-*.parquet
-
-backend/data/
-
-.vscode/
-backend/.venv/

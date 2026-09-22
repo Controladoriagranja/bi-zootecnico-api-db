@@ -5,7 +5,7 @@ const APP_CONFIG = {
     // Quando o cloudflared reiniciar, a URL trycloudflare.com pode mudar.
     // Troque somente este valor quando isso acontecer.
     API_URL:
-        "https://specials-disclaimer-device-accountability.trycloudflare.com",
+        "https://throws-seeing-browsers-editions.trycloudflare.com ",
 
     endpoints: {
         health:

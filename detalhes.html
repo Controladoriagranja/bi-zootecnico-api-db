@@ -27,7 +27,7 @@
 
     <link
         rel="stylesheet"
-        href="assets/css/app.css?v=7.1"
+        href="assets/css/app.css?v=7.2"
     >
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css">
 </head>
@@ -84,13 +84,43 @@
     </header>
 
 
+    <section class="date-range-toolbar" aria-label="Filtro por período">
+        <div class="date-range-title">
+            <span>Período</span>
+            <strong>Data de abate</strong>
+        </div>
+
+        <label class="date-range-field">
+            <span>De</span>
+            <input id="detalhesdataInicio" type="date">
+        </label>
+
+        <span class="date-range-between">até</span>
+
+        <label class="date-range-field">
+            <span>Até</span>
+            <input id="detalhesdataFim" type="date">
+        </label>
+
+        <button
+            id="detalheslimparPeriodo"
+            class="date-range-clear"
+            type="button"
+            title="Limpar período"
+            aria-label="Limpar período"
+        >
+            ×
+        </button>
+    </section>
+
+
     <section class="card filter-card">
 
         <div class="filter-card-top">
             <div>
                 <h2>Contexto da análise</h2>
                 <p>
-                    Ano, mês e galpão existem somente no detalhamento.
+                    Filtros múltiplos, período, ano, mês e galpão para refinar a análise.
                 </p>
             </div>
 
@@ -112,40 +142,30 @@
                 </select>
             </label>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Ano</span>
-                <select id="ano">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="ano" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Mês</span>
-                <select id="mes">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="mes" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Produtor</span>
-                <select id="produtor">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="produtor" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Técnico</span>
-                <select id="tecnico">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="tecnico" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Galpão</span>
-                <select id="galpao">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="galpao" class="checkbox-multiselect"></div>
+            </div>
 
         </div>
 
@@ -274,13 +294,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 
-<script src="assets/js/config.js?v=7.1"></script>
-<script src="assets/js/metrics.js?v=7.1"></script>
-<script src="assets/js/api.js?v=7.1"></script>
-<script src="assets/js/theme.js?v=7.1"></script>
-<script src="assets/js/filters.js?v=7.1"></script>
-<script src="assets/js/charts.js?v=7.1"></script>
-<script src="assets/js/detalhes.js?v=7.1"></script>
+<script src="assets/js/config.js?v=7.2"></script>
+<script src="assets/js/metrics.js?v=7.2"></script>
+<script src="assets/js/api.js?v=7.2"></script>
+<script src="assets/js/theme.js?v=7.2"></script>
+<script src="assets/js/filters.js?v=7.2"></script>
+<script src="assets/js/charts.js?v=7.2"></script>
+<script src="assets/js/detalhes.js?v=7.2"></script>
 
 </body>
 </html>

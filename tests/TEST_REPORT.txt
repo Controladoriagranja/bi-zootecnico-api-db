@@ -1,0 +1,38 @@
+BI Zootécnico V7.2 - RELATÓRIO DE TESTES
+
+Base usada:
+- ZIP atual enviado pelo usuário.
+
+Cloudflare:
+- config.js preservado byte a byte: SIM.
+- arquitetura api-tunnel preservada: SIM.
+- endpoint/API base não foi trocado.
+
+Alterações:
+- Data De/Até na primeira tela: OK.
+- Data De/Até no detalhamento: OK.
+- 7 filtros checkbox/multiselect na primeira tela: OK.
+- Ano em checkbox/multiselect no detalhamento: OK.
+- Mês em checkbox/multiselect no detalhamento: OK.
+- Produtor/Técnico/Galpão multiselect no detalhamento: OK.
+- ƒx nos cards: OK.
+- parâmetros repetidos no cliente HTTP: OK.
+- FastAPI aceita listas e intervalo de datas: OK.
+- OR dentro do mesmo filtro / AND entre filtros: OK.
+
+Testes:
+- sintaxe JavaScript: 9 arquivos, todos OK.
+- sintaxe Python: backend/main.py, metrics.py e config.py OK.
+- SQL multiselect Status: OK.
+- SQL multiselect Produtor: OK.
+- SQL Ano/Mês múltiplos: OK.
+- SQL Data inicial/final: OK.
+- Pura: OK.
+- Mista: OK.
+- Pura + Mista: OK.
+
+Observação:
+Como o contrato da API passou a aceitar múltiplos valores e data_inicio/data_fim,
+é necessário substituir também backend/main.py na máquina local que está atrás
+do Cloudflare Tunnel e reiniciar a FastAPI. O cloudflared/configuração do tunnel
+não precisa mudar.

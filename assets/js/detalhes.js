@@ -15,27 +15,32 @@ const DETAIL_FILTERS = [
     {
         id: "ano",
         apiKey: "ano",
-        search: false
+        search: false,
+        multi: true
     },
     {
         id: "mes",
         apiKey: "mes",
-        search: false
+        search: false,
+        multi: true
     },
     {
         id: "produtor",
         apiKey: "produtor",
-        search: true
+        search: true,
+        multi: true
     },
     {
         id: "tecnico",
         apiKey: "tecnico",
-        search: true
+        search: true,
+        multi: true
     },
     {
         id: "galpao",
         apiKey: "galpao",
-        search: true
+        search: true,
+        multi: true
     }
 ];
 
@@ -45,12 +50,65 @@ const inheritedKeys = [
     "tipo_granja",
     "modelo",
     "tipo_linhagem",
-    "linhagem"
+    "linhagem",
+    "data_inicio",
+    "data_fim"
 ];
 
 
 let detalhesData = null;
 let requestController = null;
+
+
+const detailPeriod = {
+    inicio:
+        document.getElementById(
+            "detalhesdataInicio"
+        ),
+    fim:
+        document.getElementById(
+            "detalhesdataFim"
+        )
+};
+
+function detailPeriodValues() {
+    const values = {};
+
+    if (detailPeriod.inicio?.value) {
+        values.data_inicio =
+            detailPeriod.inicio.value;
+    }
+
+    if (detailPeriod.fim?.value) {
+        values.data_fim =
+            detailPeriod.fim.value;
+    }
+
+    return values;
+}
+
+function validDetailPeriod() {
+    const values = detailPeriodValues();
+
+    if (
+        values.data_inicio
+        && values.data_fim
+        && values.data_inicio > values.data_fim
+    ) {
+        const el =
+            document.getElementById(
+                "mensagemErro"
+            );
+
+        el.textContent =
+            "A data inicial não pode ser maior que a data final.";
+
+        el.classList.remove("hidden");
+        return false;
+    }
+
+    return true;
+}
 
 
 const filters = new FilterController({
@@ -61,7 +119,12 @@ const filters = new FilterController({
         carregarDetalhes(false);
     },
 
-    includeDependentRefresh: true
+    includeDependentRefresh: true,
+
+    contextProvider: () => ({
+        ...inheritedFilters(),
+        ...detailPeriodValues()
+    })
 });
 
 
@@ -69,11 +132,16 @@ function inheritedFilters() {
     const result = {};
 
     inheritedKeys.forEach(key => {
-        const value =
-            params.get(key);
+        const values =
+            params
+                .getAll(key)
+                .filter(Boolean);
 
-        if (value) {
-            result[key] = value;
+        if (values.length > 1) {
+            result[key] = values;
+        }
+        else if (values.length === 1) {
+            result[key] = values[0];
         }
     });
 
@@ -84,7 +152,8 @@ function inheritedFilters() {
 function allFilters() {
     return {
         ...inheritedFilters(),
-        ...filters.values()
+        ...filters.values(),
+        ...detailPeriodValues()
     };
 }
 
@@ -160,6 +229,13 @@ function atualizarUrl() {
         allFilters()
     ).forEach(
         ([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach(item => {
+                    next.append(key, item);
+                });
+                return;
+            }
+
             if (value) {
                 next.set(key, value);
             }
@@ -436,6 +512,14 @@ document
         async () => {
             filters.clear();
 
+            if (detailPeriod.inicio) {
+                detailPeriod.inicio.value = "";
+            }
+
+            if (detailPeriod.fim) {
+                detailPeriod.fim.value = "";
+            }
+
             await filters.loadOptions({
                 preserve: false
             });
@@ -448,19 +532,108 @@ document
 
 async function aplicarParametrosUrl() {
     DETAIL_FILTERS.forEach(field => {
-        const value =
-            params.get(
-                field.apiKey
-            );
+        const values =
+            params
+                .getAll(field.apiKey)
+                .filter(Boolean);
 
-        if (value) {
+        if (values.length) {
             filters.set(
                 field.apiKey,
-                value
+                field.multi
+                    ? values
+                    : values[0]
             );
         }
     });
+
+    const dataInicio =
+        params.get("data_inicio");
+
+    const dataFim =
+        params.get("data_fim");
+
+    if (
+        detailPeriod.inicio
+        && dataInicio
+    ) {
+        detailPeriod.inicio.value =
+            dataInicio;
+    }
+
+    if (
+        detailPeriod.fim
+        && dataFim
+    ) {
+        detailPeriod.fim.value =
+            dataFim;
+    }
 }
+
+
+async function applyDetailPeriod() {
+    const errorEl =
+        document.getElementById(
+            "mensagemErro"
+        );
+
+    errorEl.classList.add("hidden");
+
+    if (!validDetailPeriod()) {
+        return;
+    }
+
+    try {
+        await filters.loadOptions({
+            preserve: true
+        });
+
+        atualizarUrl();
+        await carregarDetalhes(false);
+    }
+    catch (error) {
+        if (error.name !== "AbortError") {
+            console.error(error);
+
+            errorEl.textContent =
+                error.message
+                || "Falha ao aplicar o período.";
+
+            errorEl.classList.remove(
+                "hidden"
+            );
+        }
+    }
+}
+
+detailPeriod.inicio?.addEventListener(
+    "change",
+    applyDetailPeriod
+);
+
+detailPeriod.fim?.addEventListener(
+    "change",
+    applyDetailPeriod
+);
+
+document
+    .getElementById(
+        "detalheslimparPeriodo"
+    )
+    ?.addEventListener(
+        "click",
+        async () => {
+            if (detailPeriod.inicio) {
+                detailPeriod.inicio.value = "";
+            }
+
+            if (detailPeriod.fim) {
+                detailPeriod.fim.value = "";
+            }
+
+            await applyDetailPeriod();
+        }
+    );
 
 
 async function iniciar() {
@@ -469,17 +642,6 @@ async function iniciar() {
     filters.register();
 
     // Carrega opções respeitando os filtros herdados da primeira página.
-    const originalValues =
-        filters.values;
-
-    filters.values =
-        function () {
-            return {
-                ...inheritedFilters(),
-                ...originalValues.call(this)
-            };
-        };
-
     await filters.loadOptions({
         preserve: false
     });

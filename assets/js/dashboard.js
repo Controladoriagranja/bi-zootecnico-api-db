@@ -2,37 +2,44 @@ const FIRST_FILTERS = [
     {
         id: "status",
         apiKey: "status_acerto",
-        search: true
+        search: true,
+        multi: true
     },
     {
         id: "tipoGranja",
         apiKey: "tipo_granja",
-        search: true
+        search: true,
+        multi: true
     },
     {
         id: "modelo",
         apiKey: "modelo",
-        search: true
+        search: true,
+        multi: true
     },
     {
         id: "produtor",
         apiKey: "produtor",
-        search: true
+        search: true,
+        multi: true
     },
     {
         id: "tecnico",
         apiKey: "tecnico",
-        search: true
+        search: true,
+        multi: true
     },
     {
         id: "tipoLinhagem",
         apiKey: "tipo_linhagem",
-        search: false
+        search: false,
+        multi: true
     },
     {
         id: "linhagem",
         apiKey: "linhagem",
-        search: true
+        search: true,
+        multi: true
     }
 ];
 
@@ -47,6 +54,50 @@ let performanceController = null;
 const sortState = {};
 
 
+const periodFilter = {
+    inicio: document.getElementById("dataInicio"),
+    fim: document.getElementById("dataFim")
+};
+
+function periodValues() {
+    const values = {};
+
+    if (periodFilter.inicio?.value) {
+        values.data_inicio = periodFilter.inicio.value;
+    }
+
+    if (periodFilter.fim?.value) {
+        values.data_fim = periodFilter.fim.value;
+    }
+
+    return values;
+}
+
+function dashboardFilters() {
+    return {
+        ...filters.values(),
+        ...periodValues()
+    };
+}
+
+function validPeriod() {
+    const values = periodValues();
+
+    if (
+        values.data_inicio
+        && values.data_fim
+        && values.data_inicio > values.data_fim
+    ) {
+        errorMessage(
+            "A data inicial não pode ser maior que a data final."
+        );
+        return false;
+    }
+
+    return true;
+}
+
+
 const filters = new FilterController({
     fields: FIRST_FILTERS,
 
@@ -54,7 +105,9 @@ const filters = new FilterController({
         carregarDashboard(false);
     },
 
-    includeDependentRefresh: true
+    includeDependentRefresh: true,
+
+    contextProvider: () => periodValues()
 });
 
 
@@ -133,10 +186,23 @@ function detailUrl(
     );
 
     Object.entries(
-        filters.values()
+        dashboardFilters()
     ).forEach(
         ([key, value]) => {
-            params.set(key, value);
+            if (Array.isArray(value)) {
+                value.forEach(item => {
+                    params.append(key, item);
+                });
+                return;
+            }
+
+            if (
+                value !== null
+                && value !== undefined
+                && value !== ""
+            ) {
+                params.set(key, value);
+            }
         }
     );
 
@@ -418,7 +484,7 @@ function metricCard(
                     data-info-metric="${metricId}"
                     title="Ver fórmula"
                 >
-                    i
+                    <span class="formula-fx">ƒx</span>
                 </button>
 
                 <a
@@ -546,7 +612,7 @@ async function carregarDashboard(
                 APP_CONFIG
                     .endpoints
                     .desempenho,
-                filters.values(),
+                dashboardFilters(),
                 {
                     signal:
                         performanceController
@@ -686,6 +752,15 @@ document
         "click",
         async () => {
             filters.clear();
+
+            if (periodFilter.inicio) {
+                periodFilter.inicio.value = "";
+            }
+
+            if (periodFilter.fim) {
+                periodFilter.fim.value = "";
+            }
+
             await filters.loadOptions({
                 preserve: false
             });
@@ -742,6 +817,59 @@ document
     .addEventListener(
         "click",
         fecharFormula
+    );
+
+
+async function applyPeriod() {
+    clearError();
+
+    if (!validPeriod()) {
+        return;
+    }
+
+    try {
+        await filters.loadOptions({
+            preserve: true
+        });
+
+        await carregarDashboard(false);
+    }
+    catch (error) {
+        if (error.name !== "AbortError") {
+            console.error(error);
+            errorMessage(
+                error.message
+                || "Falha ao aplicar o período."
+            );
+        }
+    }
+}
+
+periodFilter.inicio?.addEventListener(
+    "change",
+    applyPeriod
+);
+
+periodFilter.fim?.addEventListener(
+    "change",
+    applyPeriod
+);
+
+document
+    .getElementById("limparPeriodo")
+    ?.addEventListener(
+        "click",
+        async () => {
+            if (periodFilter.inicio) {
+                periodFilter.inicio.value = "";
+            }
+
+            if (periodFilter.fim) {
+                periodFilter.fim.value = "";
+            }
+
+            await applyPeriod();
+        }
     );
 
 

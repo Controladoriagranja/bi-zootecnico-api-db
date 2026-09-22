@@ -186,6 +186,8 @@ def parametros_filtros(
     galpao=None,
     ano=None,
     mes=None,
+    data_inicio=None,
+    data_fim=None,
 ):
     return {
         "status_acerto": status_acerto,
@@ -198,7 +200,24 @@ def parametros_filtros(
         "galpao": galpao,
         "ano": ano,
         "mes": mes,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
     }
+
+
+def lista_valores(valor):
+    if valor is None or valor == "":
+        return []
+
+    if isinstance(valor, (list, tuple, set)):
+        return [
+            item
+            for item in valor
+            if item is not None
+            and item != ""
+        ]
+
+    return [valor]
 
 
 def montar_where(
@@ -213,22 +232,36 @@ def montar_where(
         if chave == excluir:
             continue
 
-        valor = filtros.get(chave)
+        valores = lista_valores(
+            filtros.get(chave)
+        )
 
-        if valor is None or valor == "":
+        if not valores:
             continue
 
-        condicoes.append(
-            f'CAST("{coluna}" AS VARCHAR) = ?'
+        placeholders = ", ".join(
+            "?"
+            for _ in valores
         )
-        parametros.append(str(valor))
 
-    # Tipo de linhagem é derivado da coluna original Linhagem.
-    # '/' = Mista; sem '/' = Pura.
+        condicoes.append(
+            f'CAST("{coluna}" AS VARCHAR) IN ({placeholders})'
+        )
+
+        parametros.extend(
+            str(valor)
+            for valor in valores
+        )
+
     if excluir != "tipo_linhagem":
-        tipo_linhagem = filtros.get("tipo_linhagem")
+        tipos_linhagem = {
+            str(item).lower()
+            for item in lista_valores(
+                filtros.get("tipo_linhagem")
+            )
+        }
 
-        if tipo_linhagem == "mista":
+        if tipos_linhagem == {"mista"}:
             condicoes.append(
                 """
                 "Linhagem" IS NOT NULL
@@ -237,7 +270,7 @@ def montar_where(
                 """.strip()
             )
 
-        elif tipo_linhagem == "pura":
+        elif tipos_linhagem == {"pura"}:
             condicoes.append(
                 """
                 "Linhagem" IS NOT NULL
@@ -246,20 +279,70 @@ def montar_where(
                 """.strip()
             )
 
-    data_expr = f'TRY_CAST("{coluna_data}" AS TIMESTAMP)'
+    data_expr = (
+        f'TRY_CAST("{coluna_data}" AS TIMESTAMP)'
+    )
 
-    if excluir != "ano" and filtros.get("ano") not in (None, ""):
-        condicoes.append(f"YEAR({data_expr}) = ?")
-        parametros.append(int(filtros["ano"]))
+    if excluir != "ano":
+        anos = [
+            int(valor)
+            for valor in lista_valores(
+                filtros.get("ano")
+            )
+        ]
 
-    if excluir != "mes" and filtros.get("mes") not in (None, ""):
-        condicoes.append(f"MONTH({data_expr}) = ?")
-        parametros.append(int(filtros["mes"]))
+        if anos:
+            placeholders = ", ".join(
+                "?"
+                for _ in anos
+            )
+
+            condicoes.append(
+                f"YEAR({data_expr}) IN ({placeholders})"
+            )
+            parametros.extend(anos)
+
+    if excluir != "mes":
+        meses = [
+            int(valor)
+            for valor in lista_valores(
+                filtros.get("mes")
+            )
+        ]
+
+        if meses:
+            placeholders = ", ".join(
+                "?"
+                for _ in meses
+            )
+
+            condicoes.append(
+                f"MONTH({data_expr}) IN ({placeholders})"
+            )
+            parametros.extend(meses)
+
+    data_inicio = filtros.get("data_inicio")
+    data_fim = filtros.get("data_fim")
+
+    if data_inicio not in (None, ""):
+        condicoes.append(
+            f"CAST({data_expr} AS DATE) >= CAST(? AS DATE)"
+        )
+        parametros.append(str(data_inicio))
+
+    if data_fim not in (None, ""):
+        condicoes.append(
+            f"CAST({data_expr} AS DATE) <= CAST(? AS DATE)"
+        )
+        parametros.append(str(data_fim))
 
     if not condicoes:
         return "", parametros
 
-    return " WHERE " + " AND ".join(condicoes), parametros
+    return (
+        " WHERE " + " AND ".join(condicoes),
+        parametros,
+    )
 
 
 def validar_indicador(indicador: str) -> dict:
@@ -335,16 +418,18 @@ def formulas():
 
 @app.get("/api/zootecnico/filtros")
 def filtros(
-    status_acerto: Optional[str] = None,
-    tipo_granja: Optional[str] = None,
-    modelo: Optional[str] = None,
-    produtor: Optional[str] = None,
-    tecnico: Optional[str] = None,
-    tipo_linhagem: Optional[str] = None,
-    linhagem: Optional[str] = None,
-    galpao: Optional[str] = None,
-    ano: Optional[int] = None,
-    mes: Optional[int] = None,
+    status_acerto: Optional[list[str]] = Query(None),
+    tipo_granja: Optional[list[str]] = Query(None),
+    modelo: Optional[list[str]] = Query(None),
+    produtor: Optional[list[str]] = Query(None),
+    tecnico: Optional[list[str]] = Query(None),
+    tipo_linhagem: Optional[list[str]] = Query(None),
+    linhagem: Optional[list[str]] = Query(None),
+    galpao: Optional[list[str]] = Query(None),
+    ano: Optional[list[int]] = Query(None),
+    mes: Optional[list[int]] = Query(None),
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
 ):
     _, colunas, coluna_data = garantir_cache_atualizado()
 
@@ -359,6 +444,8 @@ def filtros(
         galpao=galpao,
         ano=ano,
         mes=mes,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
     )
 
     resposta = {}
@@ -495,13 +582,17 @@ def filtros(
 
 @app.get("/api/zootecnico/desempenho")
 def desempenho(
-    status_acerto: Optional[str] = None,
-    tipo_granja: Optional[str] = None,
-    modelo: Optional[str] = None,
-    produtor: Optional[str] = None,
-    tecnico: Optional[str] = None,
-    tipo_linhagem: Optional[str] = None,
-    linhagem: Optional[str] = None,
+    status_acerto: Optional[list[str]] = Query(None),
+    tipo_granja: Optional[list[str]] = Query(None),
+    modelo: Optional[list[str]] = Query(None),
+    produtor: Optional[list[str]] = Query(None),
+    tecnico: Optional[list[str]] = Query(None),
+    tipo_linhagem: Optional[list[str]] = Query(None),
+    linhagem: Optional[list[str]] = Query(None),
+    ano: Optional[list[int]] = Query(None),
+    mes: Optional[list[int]] = Query(None),
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
 ):
     caminho, colunas, coluna_data = garantir_cache_atualizado()
 
@@ -513,6 +604,10 @@ def desempenho(
         tecnico=tecnico,
         tipo_linhagem=tipo_linhagem,
         linhagem=linhagem,
+        ano=ano,
+        mes=mes,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
     )
 
     for metric_id in ORDEM_INDICADORES:
@@ -631,16 +726,18 @@ def desempenho(
 @app.get("/api/zootecnico/detalhes")
 def detalhes(
     indicador: str,
-    status_acerto: Optional[str] = None,
-    tipo_granja: Optional[str] = None,
-    modelo: Optional[str] = None,
-    produtor: Optional[str] = None,
-    tecnico: Optional[str] = None,
-    tipo_linhagem: Optional[str] = None,
-    linhagem: Optional[str] = None,
-    galpao: Optional[str] = None,
-    ano: Optional[int] = None,
-    mes: Optional[int] = None,
+    status_acerto: Optional[list[str]] = Query(None),
+    tipo_granja: Optional[list[str]] = Query(None),
+    modelo: Optional[list[str]] = Query(None),
+    produtor: Optional[list[str]] = Query(None),
+    tecnico: Optional[list[str]] = Query(None),
+    tipo_linhagem: Optional[list[str]] = Query(None),
+    linhagem: Optional[list[str]] = Query(None),
+    galpao: Optional[list[str]] = Query(None),
+    ano: Optional[list[int]] = Query(None),
+    mes: Optional[list[int]] = Query(None),
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
 ):
     caminho, colunas, coluna_data = garantir_cache_atualizado()
     metrica = validar_indicador(indicador)
@@ -656,6 +753,8 @@ def detalhes(
         galpao=galpao,
         ano=ano,
         mes=mes,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
     )
 
     where_sql, params = montar_where(

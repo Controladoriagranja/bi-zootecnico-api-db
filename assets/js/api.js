@@ -40,15 +40,34 @@ async function apiGet(
         .forEach(
             ([key, value]) => {
                 if (
-                    value !== null
-                    && value !== undefined
-                    && value !== ""
+                    value === null
+                    || value === undefined
+                    || value === ""
                 ) {
-                    url.searchParams.append(
-                        key,
-                        String(value)
-                    );
+                    return;
                 }
+
+                if (Array.isArray(value)) {
+                    value.forEach(item => {
+                        if (
+                            item !== null
+                            && item !== undefined
+                            && item !== ""
+                        ) {
+                            url.searchParams.append(
+                                key,
+                                String(item)
+                            );
+                        }
+                    });
+
+                    return;
+                }
+
+                url.searchParams.append(
+                    key,
+                    String(value)
+                );
             }
         );
 

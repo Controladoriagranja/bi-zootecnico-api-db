@@ -27,7 +27,7 @@
 
     <link
         rel="stylesheet"
-        href="assets/css/app.css?v=7.1"
+        href="assets/css/app.css?v=7.2"
     >
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css">
 </head>
@@ -82,6 +82,36 @@
     </header>
 
 
+    <section class="date-range-toolbar" aria-label="Filtro por período">
+        <div class="date-range-title">
+            <span>Período</span>
+            <strong>Data de abate</strong>
+        </div>
+
+        <label class="date-range-field">
+            <span>De</span>
+            <input id="dataInicio" type="date">
+        </label>
+
+        <span class="date-range-between">até</span>
+
+        <label class="date-range-field">
+            <span>Até</span>
+            <input id="dataFim" type="date">
+        </label>
+
+        <button
+            id="limparPeriodo"
+            class="date-range-clear"
+            type="button"
+            title="Limpar período"
+            aria-label="Limpar período"
+        >
+            ×
+        </button>
+    </section>
+
+
     <section class="card filter-card">
 
         <div class="filter-card-top">
@@ -103,54 +133,40 @@
 
         <div class="filters-grid first-page-filters">
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Status Acerto</span>
-                <select id="status">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="status" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Tipo de Granja</span>
-                <select id="tipoGranja">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="tipoGranja" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Modelo</span>
-                <select id="modelo">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="modelo" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Produtor</span>
-                <select id="produtor">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="produtor" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Técnico</span>
-                <select id="tecnico">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="tecnico" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Tipo de Linhagem</span>
-                <select id="tipoLinhagem">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="tipoLinhagem" class="checkbox-multiselect"></div>
+            </div>
 
-            <label class="filter-field">
+            <div class="filter-field">
                 <span>Linhagem</span>
-                <select id="linhagem">
-                    <option value="">Todos</option>
-                </select>
-            </label>
+                <div id="linhagem" class="checkbox-multiselect"></div>
+            </div>
 
         </div>
 
@@ -262,12 +278,12 @@
 </div>
 
 
-<script src="assets/js/config.js?v=7.1"></script>
-<script src="assets/js/metrics.js?v=7.1"></script>
-<script src="assets/js/api.js?v=7.1"></script>
-<script src="assets/js/theme.js?v=7.1"></script>
-<script src="assets/js/filters.js?v=7.1"></script>
-<script src="assets/js/dashboard.js?v=7.1"></script>
+<script src="assets/js/config.js?v=7.2"></script>
+<script src="assets/js/metrics.js?v=7.2"></script>
+<script src="assets/js/api.js?v=7.2"></script>
+<script src="assets/js/theme.js?v=7.2"></script>
+<script src="assets/js/filters.js?v=7.2"></script>
+<script src="assets/js/dashboard.js?v=7.2"></script>
 
 </body>
 </html>

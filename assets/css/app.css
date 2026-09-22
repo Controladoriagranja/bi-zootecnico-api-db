@@ -1558,3 +1558,288 @@ body {
         min-height: 360px;
     }
 }
+
+
+/* ============================================================
+   V7.2 - PERÍODO + CHECKBOX MULTISELECT
+   ============================================================ */
+
+.date-range-toolbar {
+    width: min(560px, 100%);
+    margin: -10px 0 12px auto;
+    padding: 10px 12px;
+
+    display: grid;
+    grid-template-columns:
+        auto minmax(130px, 1fr)
+        auto minmax(130px, 1fr)
+        32px;
+    align-items: end;
+    gap: 8px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: var(--card);
+    box-shadow: var(--shadow-sm);
+}
+
+.date-range-title {
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    padding-right: 4px;
+}
+
+.date-range-title span,
+.date-range-field span {
+    font-size: 10px;
+    font-weight: 750;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.date-range-title strong {
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.date-range-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.date-range-field input {
+    width: 100%;
+    min-height: 36px;
+    padding: 0 9px;
+
+    border: 1px solid var(--input);
+    border-radius: 9px;
+
+    color: var(--foreground);
+    background: var(--background);
+
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.date-range-field input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+
+.date-range-between {
+    align-self: end;
+    padding-bottom: 9px;
+    font-size: 11px;
+    color: var(--muted-foreground);
+}
+
+.date-range-clear {
+    width: 32px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: transparent;
+    color: var(--muted-foreground);
+
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.date-range-clear:hover {
+    color: var(--foreground);
+    background: var(--muted);
+}
+
+.checkbox-multiselect {
+    position: relative;
+    width: 100%;
+}
+
+.checkbox-multiselect-trigger {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 11px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    border: 1px solid var(--input);
+    border-radius: 9px;
+
+    background: var(--background);
+    color: var(--foreground);
+
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+}
+
+.checkbox-multiselect-trigger:hover {
+    border-color:
+        color-mix(
+            in srgb,
+            var(--primary) 45%,
+            var(--border)
+        );
+}
+
+.checkbox-multiselect.open
+.checkbox-multiselect-trigger {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+
+.checkbox-multiselect-trigger.has-selection
+.checkbox-multiselect-label {
+    font-weight: 700;
+}
+
+.checkbox-multiselect-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.checkbox-multiselect-chevron {
+    flex: 0 0 auto;
+    transition: transform .16s ease;
+}
+
+.checkbox-multiselect.open
+.checkbox-multiselect-chevron {
+    transform: rotate(180deg);
+}
+
+.checkbox-multiselect-panel {
+    position: absolute;
+    z-index: 90;
+    top: calc(100% + 6px);
+    left: 0;
+
+    width: max(100%, 260px);
+    max-width: 380px;
+    display: none;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: var(--popover);
+    color: var(--popover-foreground);
+    box-shadow: var(--shadow-md);
+
+    overflow: hidden;
+}
+
+.checkbox-multiselect.open
+.checkbox-multiselect-panel {
+    display: block;
+}
+
+.checkbox-multiselect-search-wrap {
+    padding: 9px;
+    border-bottom: 1px solid var(--border);
+}
+
+.checkbox-multiselect-search {
+    width: 100%;
+    min-height: 36px;
+    padding: 0 10px;
+
+    border: 1px solid var(--input);
+    border-radius: 8px;
+
+    background: var(--background);
+    color: var(--foreground);
+
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.checkbox-multiselect-search:focus {
+    border-color: var(--primary);
+}
+
+.checkbox-multiselect-list {
+    max-height: 290px;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.checkbox-option {
+    min-height: 36px;
+    padding: 6px 8px;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+}
+
+.checkbox-option:hover {
+    background: var(--muted);
+}
+
+.checkbox-option input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--primary);
+}
+
+.checkbox-option-all {
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+    font-weight: 700;
+}
+
+.formula-fx {
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: -.02em;
+}
+
+@media (max-width: 860px) {
+    .date-range-toolbar {
+        width: 100%;
+        margin-top: 0;
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr)
+            32px;
+    }
+
+    .date-range-title {
+        grid-column: 1 / -1;
+    }
+
+    .date-range-between {
+        display: none;
+    }
+
+    .checkbox-multiselect-panel {
+        width: 100%;
+        max-width: none;
+    }
+}

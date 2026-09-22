@@ -1,12 +1,11 @@
 const APP_CONFIG = {
-    mode: "static-hyparquet",
+    mode: "api-tunnel",
 
-    parquetUrl:
-        "data/base_dinamica.parquet",
-
-    // Leitor Parquet puro JavaScript: muito menor que DuckDB-Wasm.
-    hyparquetModuleUrl:
-        "https://cdn.jsdelivr.net/npm/hyparquet@1.31.1/+esm",
+    // URL temporária do Cloudflare Quick Tunnel usada no teste atual.
+    // Quando o cloudflared reiniciar, a URL trycloudflare.com pode mudar.
+    // Troque somente este valor quando isso acontecer.
+    API_URL:
+        "https://advert-critics-rest-checked.trycloudflare.com",
 
     endpoints: {
         health:

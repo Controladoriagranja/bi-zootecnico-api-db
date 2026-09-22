@@ -31,6 +31,10 @@ MESES = [
 
 CACHE_TABLE = "base_dinamica_cache"
 
+# Regra global do dashboard:
+# 2022 e anos anteriores ficam fora dos filtros e cálculos.
+ANO_MINIMO = 2023
+
 # Campos reais do Parquet.
 DIMENSOES = {
     "status_acerto": "Status Acerto",
@@ -283,10 +287,11 @@ def montar_where(
         f'TRY_CAST("{coluna_data}" AS TIMESTAMP)'
     )
 
-    # Regra global do dashboard:
-    # 2022 e anos anteriores não aparecem nem entram nos cálculos.
+    # Regra global do dashboard.
+    # Esta condição é aplicada mesmo quando excluir="ano",
+    # portanto a própria lista de opções do filtro Ano não pode trazer 2022.
     condicoes.append(
-        f"YEAR({data_expr}) >= 2023"
+        f"YEAR({data_expr}) >= {ANO_MINIMO}"
     )
 
     if excluir != "ano":
@@ -540,6 +545,7 @@ def filtros(
             FROM "{CACHE_TABLE}"
             {where_ano}
             {'AND' if where_ano else 'WHERE'} {data_expr} IS NOT NULL
+                AND YEAR({data_expr}) >= {ANO_MINIMO}
             ORDER BY ano DESC
             """,
             params_ano,
@@ -548,7 +554,10 @@ def filtros(
     resposta["ano"] = [
         int(linha[0])
         for linha in anos
-        if linha[0] is not None
+        if (
+            linha[0] is not None
+            and int(linha[0]) >= ANO_MINIMO
+        )
     ]
 
     # Mês dependente.
@@ -677,7 +686,10 @@ def desempenho(
     anos = sorted({
         int(linha["ano"])
         for linha in mensal
-        if linha["ano"] is not None
+        if (
+            linha["ano"] is not None
+            and int(linha["ano"]) >= ANO_MINIMO
+        )
     })
 
     indicadores = {}
@@ -834,7 +846,10 @@ def detalhes(
     anos_evolucao = sorted({
         int(l[0])
         for l in evolucao_linhas
-        if l[0] is not None
+        if (
+            l[0] is not None
+            and int(l[0]) >= ANO_MINIMO
+        )
     })
 
     series = []

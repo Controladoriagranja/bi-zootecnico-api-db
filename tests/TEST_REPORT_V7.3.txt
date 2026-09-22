@@ -1,0 +1,20 @@
+BI Zootécnico V7.3 - TEST REPORT
+
+Correções:
+- Ano e Mês adicionados à primeira tela.
+- Ano e Mês continuam disponíveis no detalhamento.
+- Os quatro filtros usam dropdown clicável com checkboxes.
+- Primeira opção: "Selecionar tudo".
+- Seleção parcial usa estado indeterminado.
+- Múltiplos anos/meses continuam sendo enviados para a API.
+- Cloudflare/FastAPI da V7.2 foi preservado.
+
+Testes:
+- sintaxe de todos os JS: OK.
+- Ano no index.html: OK.
+- Mês no index.html: OK.
+- Ano no detalhes.html: OK.
+- Mês no detalhes.html: OK.
+- Ano/Mês presentes no FIRST_FILTERS: OK.
+- "Selecionar tudo": OK.
+- estado indeterminado: OK.

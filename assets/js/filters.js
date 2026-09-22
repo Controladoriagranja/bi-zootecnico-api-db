@@ -244,25 +244,33 @@ class FilterController {
         }
 
         state.options = options;
+
         state.selected = new Set(
             this.normalizeArray(selected)
                 .filter(value =>
-                    options.some(option => option.value === value)
+                    options.some(
+                        option =>
+                            option.value === value
+                    )
                 )
         );
+
+        const allSelected =
+            options.length > 0
+            && state.selected.size === options.length;
 
         state.list.innerHTML = `
             <label
                 class="checkbox-option checkbox-option-all"
                 data-filter-option
-                data-filter-label="Todos"
+                data-filter-label="Selecionar tudo"
             >
                 <input
                     type="checkbox"
                     data-all
-                    ${state.selected.size === 0 ? "checked" : ""}
+                    ${allSelected ? "checked" : ""}
                 >
-                <span>Todos</span>
+                <span>Selecionar tudo</span>
             </label>
 
             ${
@@ -287,52 +295,84 @@ class FilterController {
             }
         `;
 
-        const allInput = state.list.querySelector("[data-all]");
+        const allInput =
+            state.list.querySelector(
+                "[data-all]"
+            );
 
-        allInput.addEventListener("change", async () => {
-            if (this.silent) {
-                return;
-            }
-
-            if (allInput.checked) {
-                state.selected.clear();
-
-                state.list
-                    .querySelectorAll(
-                        'input[type="checkbox"]:not([data-all])'
-                    )
-                    .forEach(input => {
-                        input.checked = false;
-                    });
-            }
-
-            this.updateButton(field);
-            await this.emitChange();
-        });
-
-        state.list
-            .querySelectorAll(
+        const optionInputs = [
+            ...state.list.querySelectorAll(
                 'input[type="checkbox"]:not([data-all])'
             )
-            .forEach(input => {
-                input.addEventListener("change", async () => {
+        ];
+
+        const syncSelectAll = () => {
+            allInput.checked =
+                options.length > 0
+                && state.selected.size === options.length;
+
+            allInput.indeterminate =
+                state.selected.size > 0
+                && state.selected.size < options.length;
+        };
+
+        allInput.addEventListener(
+            "change",
+            async () => {
+                if (this.silent) {
+                    return;
+                }
+
+                state.selected.clear();
+
+                if (allInput.checked) {
+                    options.forEach(option => {
+                        state.selected.add(
+                            option.value
+                        );
+                    });
+                }
+
+                optionInputs.forEach(input => {
+                    input.checked =
+                        state.selected.has(
+                            input.value
+                        );
+                });
+
+                syncSelectAll();
+                this.updateButton(field);
+                await this.emitChange();
+            }
+        );
+
+        optionInputs.forEach(input => {
+            input.addEventListener(
+                "change",
+                async () => {
                     if (this.silent) {
                         return;
                     }
 
                     if (input.checked) {
-                        state.selected.add(input.value);
+                        state.selected.add(
+                            input.value
+                        );
                     }
                     else {
-                        state.selected.delete(input.value);
+                        state.selected.delete(
+                            input.value
+                        );
                     }
 
-                    allInput.checked = state.selected.size === 0;
+                    syncSelectAll();
                     this.updateButton(field);
                     await this.emitChange();
-                });
-            });
+                }
+            );
+        });
 
+        syncSelectAll();
         this.updateButton(field);
     }
 

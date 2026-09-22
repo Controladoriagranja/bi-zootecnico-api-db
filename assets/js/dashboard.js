@@ -30,6 +30,18 @@ const FIRST_FILTERS = [
         multi: true
     },
     {
+        id: "ano",
+        apiKey: "ano",
+        search: false,
+        multi: true
+    },
+    {
+        id: "mes",
+        apiKey: "mes",
+        search: false,
+        multi: true
+    },
+    {
         id: "tipoLinhagem",
         apiKey: "tipo_linhagem",
         search: false,

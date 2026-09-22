@@ -50,9 +50,7 @@ const inheritedKeys = [
     "tipo_granja",
     "modelo",
     "tipo_linhagem",
-    "linhagem",
-    "data_inicio",
-    "data_fim"
+    "linhagem"
 ];
 
 
@@ -60,54 +58,10 @@ let detalhesData = null;
 let requestController = null;
 
 
-const detailPeriod = {
-    inicio:
-        document.getElementById(
-            "detalhesdataInicio"
-        ),
-    fim:
-        document.getElementById(
-            "detalhesdataFim"
-        )
-};
-
-function detailPeriodValues() {
-    const values = {};
-
-    if (detailPeriod.inicio?.value) {
-        values.data_inicio =
-            detailPeriod.inicio.value;
-    }
-
-    if (detailPeriod.fim?.value) {
-        values.data_fim =
-            detailPeriod.fim.value;
-    }
-
-    return values;
-}
-
-function validDetailPeriod() {
-    const values = detailPeriodValues();
-
-    if (
-        values.data_inicio
-        && values.data_fim
-        && values.data_inicio > values.data_fim
-    ) {
-        const el =
-            document.getElementById(
-                "mensagemErro"
-            );
-
-        el.textContent =
-            "A data inicial não pode ser maior que a data final.";
-
-        el.classList.remove("hidden");
-        return false;
-    }
-
-    return true;
+function semAno2022(series) {
+    return (series || []).filter(
+        item => Number(item.ano) >= 2023
+    );
 }
 
 
@@ -122,8 +76,7 @@ const filters = new FilterController({
     includeDependentRefresh: true,
 
     contextProvider: () => ({
-        ...inheritedFilters(),
-        ...detailPeriodValues()
+        ...inheritedFilters()
     })
 });
 
@@ -152,8 +105,7 @@ function inheritedFilters() {
 function allFilters() {
     return {
         ...inheritedFilters(),
-        ...filters.values(),
-        ...detailPeriodValues()
+        ...filters.values()
     };
 }
 
@@ -512,14 +464,6 @@ document
         async () => {
             filters.clear();
 
-            if (detailPeriod.inicio) {
-                detailPeriod.inicio.value = "";
-            }
-
-            if (detailPeriod.fim) {
-                detailPeriod.fim.value = "";
-            }
-
             await filters.loadOptions({
                 preserve: false
             });
@@ -547,93 +491,8 @@ async function aplicarParametrosUrl() {
         }
     });
 
-    const dataInicio =
-        params.get("data_inicio");
 
-    const dataFim =
-        params.get("data_fim");
-
-    if (
-        detailPeriod.inicio
-        && dataInicio
-    ) {
-        detailPeriod.inicio.value =
-            dataInicio;
-    }
-
-    if (
-        detailPeriod.fim
-        && dataFim
-    ) {
-        detailPeriod.fim.value =
-            dataFim;
-    }
 }
-
-
-async function applyDetailPeriod() {
-    const errorEl =
-        document.getElementById(
-            "mensagemErro"
-        );
-
-    errorEl.classList.add("hidden");
-
-    if (!validDetailPeriod()) {
-        return;
-    }
-
-    try {
-        await filters.loadOptions({
-            preserve: true
-        });
-
-        atualizarUrl();
-        await carregarDetalhes(false);
-    }
-    catch (error) {
-        if (error.name !== "AbortError") {
-            console.error(error);
-
-            errorEl.textContent =
-                error.message
-                || "Falha ao aplicar o período.";
-
-            errorEl.classList.remove(
-                "hidden"
-            );
-        }
-    }
-}
-
-detailPeriod.inicio?.addEventListener(
-    "change",
-    applyDetailPeriod
-);
-
-detailPeriod.fim?.addEventListener(
-    "change",
-    applyDetailPeriod
-);
-
-document
-    .getElementById(
-        "detalheslimparPeriodo"
-    )
-    ?.addEventListener(
-        "click",
-        async () => {
-            if (detailPeriod.inicio) {
-                detailPeriod.inicio.value = "";
-            }
-
-            if (detailPeriod.fim) {
-                detailPeriod.fim.value = "";
-            }
-
-            await applyDetailPeriod();
-        }
-    );
 
 
 async function iniciar() {

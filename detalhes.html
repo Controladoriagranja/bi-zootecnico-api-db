@@ -19,7 +19,7 @@
             }
         })();
     </script>
-<link href="assets/css/app.css?v=7.4" rel="stylesheet"/>
+<link href="assets/css/app.css?v=7.5" rel="stylesheet"/>
 <link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css" rel="stylesheet"/>
 </head>
 <body>
@@ -51,31 +51,12 @@
 </div>
 </div>
 </header>
-<section aria-label="Filtro por período" class="date-range-toolbar">
-<div class="date-range-title">
-<span>Período</span>
-<strong>Data de abate</strong>
-</div>
-<label class="date-range-field">
-<span>De</span>
-<input id="detalhesdataInicio" type="date"/>
-</label>
-<span class="date-range-between">até</span>
-<label class="date-range-field">
-<span>Até</span>
-<input id="detalhesdataFim" type="date"/>
-</label>
-<button aria-label="Limpar período" class="date-range-clear" id="detalheslimparPeriodo" title="Limpar período" type="button">
-            ×
-        </button>
-</section>
+
 <section class="card filter-card">
 <div class="filter-card-top">
 <div>
 <h2>Contexto da análise</h2>
-<p>
-                    Filtros múltiplos, período, ano, mês e galpão para refinar a análise.
-                </p>
+<p>Ano, mês, indicador, produtor, técnico e galpão para refinar a análise.</p>
 </div>
 <button class="button button-ghost-danger" id="limparFiltrosDetalhes" type="button">
                 Limpar detalhes
@@ -94,8 +75,6 @@
 <option value="">Carregando...</option>
 </select>
 </label>
-
-
 <div class="filter-field">
 <span>Produtor</span>
 <div class="checkbox-multiselect" id="produtor"></div>
@@ -179,12 +158,12 @@
     Atualizando...
 </div>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-<script src="assets/js/config.js?v=7.4"></script>
-<script src="assets/js/metrics.js?v=7.4"></script>
-<script src="assets/js/api.js?v=7.4"></script>
-<script src="assets/js/theme.js?v=7.4"></script>
-<script src="assets/js/filters.js?v=7.4"></script>
-<script src="assets/js/charts.js?v=7.4"></script>
-<script src="assets/js/detalhes.js?v=7.4"></script>
+<script src="assets/js/config.js?v=7.5"></script>
+<script src="assets/js/metrics.js?v=7.5"></script>
+<script src="assets/js/api.js?v=7.5"></script>
+<script src="assets/js/theme.js?v=7.5"></script>
+<script src="assets/js/filters.js?v=7.5"></script>
+<script src="assets/js/charts.js?v=7.5"></script>
+<script src="assets/js/detalhes.js?v=7.5"></script>
 </body>
 </html>

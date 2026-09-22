@@ -283,6 +283,12 @@ def montar_where(
         f'TRY_CAST("{coluna_data}" AS TIMESTAMP)'
     )
 
+    # Regra global do dashboard:
+    # 2022 e anos anteriores não aparecem nem entram nos cálculos.
+    condicoes.append(
+        f"YEAR({data_expr}) >= 2023"
+    )
+
     if excluir != "ano":
         anos = [
             int(valor)

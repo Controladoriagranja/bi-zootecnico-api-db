@@ -1,0 +1,24 @@
+BI Zootécnico V7.5 - TEST REPORT
+
+Mudanças aplicadas:
+- bloco PERÍODO / Data de abate removido do detalhamento;
+- regra global YEAR >= 2023 aplicada na FastAPI;
+- 2022 não aparece nas opções de Ano;
+- 2022 não entra em tabelas, gráficos, rankings ou cálculos;
+- fallback do frontend também elimina anos anteriores a 2023;
+- Ano e Mês continuam os primeiros filtros nas duas telas;
+- configuração Cloudflare preservada byte a byte.
+
+Ordem principal:
+['ano', 'mes', 'status', 'tipoGranja', 'modelo', 'produtor', 'tecnico', 'tipoLinhagem', 'linhagem']
+
+Ordem detalhamento:
+['ano', 'mes', 'indicador', 'produtor', 'tecnico', 'galpao']
+
+Testes:
+- sintaxe de todos os JS: OK;
+- sintaxe Python: OK;
+- detalhe sem bloco de período: OK;
+- YEAR >= 2023 no backend: OK;
+- fallback frontend >= 2023: OK;
+- Cloudflare inalterado: OK.

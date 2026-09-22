@@ -311,7 +311,8 @@ function visibleYears() {
 
     const available =
         (dashboardData?.anos || [])
-            .map(Number);
+            .map(Number)
+            .filter(year => year >= 2023);
 
     if (!selected.length) {
         return available;

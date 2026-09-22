@@ -4,7 +4,8 @@ const APP_CONFIG = {
     // URL temporária do Cloudflare Quick Tunnel usada no teste atual.
     // Quando o cloudflared reiniciar, a URL trycloudflare.com pode mudar.
     // Troque somente este valor quando isso acontecer.
-    API_URL: "https://specials-disclaimer-device-accountability.trycloudflare.com"
+    API_URL:
+        "https://advert-critics-rest-checked.trycloudflare.com",
 
     endpoints: {
         health:

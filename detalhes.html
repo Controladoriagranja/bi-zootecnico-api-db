@@ -1,17 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <link rel="icon" href="data:,">
-
-    <title>Detalhamento Zootécnico</title>
-
-    <script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="data:," rel="icon"/>
+<title>Detalhamento Zootécnico</title>
+<script>
         (() => {
             const saved =
                 localStorage.getItem(
@@ -24,283 +19,172 @@
             }
         })();
     </script>
-
-    <link
-        rel="stylesheet"
-        href="assets/css/app.css?v=7.3"
-    >
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css">
+<link href="assets/css/app.css?v=7.4" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css" rel="stylesheet"/>
 </head>
-
 <body>
-
 <div class="app-shell">
-
-    <header class="page-header details-header">
-
-        <div>
-            <a
-                id="voltarDashboard"
-                href="index.html"
-                class="back-link"
-            >
+<header class="page-header details-header">
+<div>
+<a class="back-link" href="index.html" id="voltarDashboard">
                 ← Desempenho Zootécnico
             </a>
-
-            <div class="eyebrow">
+<div class="eyebrow">
                 Detalhamento
             </div>
-
-            <h1 id="tituloDetalhes">
+<h1 id="tituloDetalhes">
                 Detalhamento Zootécnico
             </h1>
-
-            <p id="subtituloDetalhes">
+<p id="subtituloDetalhes">
                 Análise detalhada do indicador.
             </p>
-        </div>
-
-        <div class="header-toolbar">
-
-            <button
-                class="icon-button"
-                type="button"
-                data-theme-toggle
-                aria-label="Alternar tema"
-                title="Alternar tema"
-            >
-                <span data-theme-icon>☾</span>
-            </button>
-
-            <div class="update-meta">
-                <span>Última atualização</span>
-                <strong id="ultimaAtualizacao">
+</div>
+<div class="header-toolbar">
+<button aria-label="Alternar tema" class="icon-button" data-theme-toggle="" title="Alternar tema" type="button">
+<span data-theme-icon="">☾</span>
+</button>
+<div class="update-meta">
+<span>Última atualização</span>
+<strong id="ultimaAtualizacao">
                     Carregando...
                 </strong>
-            </div>
-
-        </div>
-
-    </header>
-
-
-    <section class="date-range-toolbar" aria-label="Filtro por período">
-        <div class="date-range-title">
-            <span>Período</span>
-            <strong>Data de abate</strong>
-        </div>
-
-        <label class="date-range-field">
-            <span>De</span>
-            <input id="detalhesdataInicio" type="date">
-        </label>
-
-        <span class="date-range-between">até</span>
-
-        <label class="date-range-field">
-            <span>Até</span>
-            <input id="detalhesdataFim" type="date">
-        </label>
-
-        <button
-            id="detalheslimparPeriodo"
-            class="date-range-clear"
-            type="button"
-            title="Limpar período"
-            aria-label="Limpar período"
-        >
+</div>
+</div>
+</header>
+<section aria-label="Filtro por período" class="date-range-toolbar">
+<div class="date-range-title">
+<span>Período</span>
+<strong>Data de abate</strong>
+</div>
+<label class="date-range-field">
+<span>De</span>
+<input id="detalhesdataInicio" type="date"/>
+</label>
+<span class="date-range-between">até</span>
+<label class="date-range-field">
+<span>Até</span>
+<input id="detalhesdataFim" type="date"/>
+</label>
+<button aria-label="Limpar período" class="date-range-clear" id="detalheslimparPeriodo" title="Limpar período" type="button">
             ×
         </button>
-    </section>
-
-
-    <section class="card filter-card">
-
-        <div class="filter-card-top">
-            <div>
-                <h2>Contexto da análise</h2>
-                <p>
+</section>
+<section class="card filter-card">
+<div class="filter-card-top">
+<div>
+<h2>Contexto da análise</h2>
+<p>
                     Filtros múltiplos, período, ano, mês e galpão para refinar a análise.
                 </p>
-            </div>
-
-            <button
-                id="limparFiltrosDetalhes"
-                class="button button-ghost-danger"
-                type="button"
-            >
+</div>
+<button class="button button-ghost-danger" id="limparFiltrosDetalhes" type="button">
                 Limpar detalhes
             </button>
-        </div>
-
-        <div class="filters-grid details-filters details-filters-with-indicator">
-
-            <label class="filter-field">
-                <span>Indicador</span>
-                <select id="indicador">
-                    <option value="">Carregando...</option>
-                </select>
-            </label>
-
-            <div class="filter-field">
-                <span>Ano</span>
-                <div id="ano" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Mês</span>
-                <div id="mes" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Produtor</span>
-                <div id="produtor" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Técnico</span>
-                <div id="tecnico" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Galpão</span>
-                <div id="galpao" class="checkbox-multiselect"></div>
-            </div>
-
-        </div>
-
-    </section>
+</div>
+<div class="filters-grid details-filters details-filters-with-indicator"><div class="filter-field">
+<span>Ano</span>
+<div class="checkbox-multiselect" id="ano"></div>
+</div><div class="filter-field">
+<span>Mês</span>
+<div class="checkbox-multiselect" id="mes"></div>
+</div>
+<label class="filter-field">
+<span>Indicador</span>
+<select id="indicador">
+<option value="">Carregando...</option>
+</select>
+</label>
 
 
-    <div
-        id="mensagemErro"
-        class="alert alert-error hidden"
-    ></div>
-
-
-    <section class="details-top-grid">
-
-        <article class="card metric-summary-card">
-            <div class="card-heading-row">
-                <div>
-                    <div class="card-kicker">
+<div class="filter-field">
+<span>Produtor</span>
+<div class="checkbox-multiselect" id="produtor"></div>
+</div>
+<div class="filter-field">
+<span>Técnico</span>
+<div class="checkbox-multiselect" id="tecnico"></div>
+</div>
+<div class="filter-field">
+<span>Galpão</span>
+<div class="checkbox-multiselect" id="galpao"></div>
+</div>
+</div>
+</section>
+<div class="alert alert-error hidden" id="mensagemErro"></div>
+<section class="details-top-grid">
+<article class="card metric-summary-card">
+<div class="card-heading-row">
+<div>
+<div class="card-kicker">
                         Indicador selecionado
                     </div>
-
-                    <h2 id="kpiNome">
+<h2 id="kpiNome">
                         —
                     </h2>
-                </div>
-
-                <a
-                    href="formulas.html"
-                    class="mini-link"
-                >
+</div>
+<a class="mini-link" href="formulas.html">
                     Fórmula
                 </a>
-            </div>
-
-            <div
-                id="kpiValor"
-                class="metric-summary-value"
-            >
+</div>
+<div class="metric-summary-value" id="kpiValor">
                 —
             </div>
-
-            <div
-                id="kpiContexto"
-                class="metric-summary-caption"
-            >
+<div class="metric-summary-caption" id="kpiContexto">
                 Contexto atual dos filtros
             </div>
-        </article>
-
-
-        <article class="card chart-card">
-            <div class="card-heading-row">
-                <div>
-                    <div class="card-kicker">
+</article>
+<article class="card chart-card">
+<div class="card-heading-row">
+<div>
+<div class="card-kicker">
                         Ranking
                     </div>
-
-                    <h2>Técnicos</h2>
-                </div>
-            </div>
-
-            <div
-                id="rankingTecnicos"
-                class="chart chart-ranking"
-            ></div>
-        </article>
-
-
-        <article class="card chart-card">
-            <div class="card-heading-row">
-                <div>
-                    <div class="card-kicker">
+<h2>Técnicos</h2>
+</div>
+</div>
+<div class="chart chart-ranking" id="rankingTecnicos"></div>
+</article>
+<article class="card chart-card">
+<div class="card-heading-row">
+<div>
+<div class="card-kicker">
                         Ranking
                     </div>
-
-                    <h2>Produtores</h2>
-                </div>
-            </div>
-
-            <div
-                id="rankingProdutores"
-                class="chart chart-ranking"
-            ></div>
-        </article>
-
-    </section>
-
-
-    <article class="card chart-card evolution-card">
-
-        <div class="card-heading-row">
-            <div>
-                <div class="card-kicker">
+<h2>Produtores</h2>
+</div>
+</div>
+<div class="chart chart-ranking" id="rankingProdutores"></div>
+</article>
+</section>
+<article class="card chart-card evolution-card">
+<div class="card-heading-row">
+<div>
+<div class="card-kicker">
                     Evolução
                 </div>
-
-                <h2 id="tituloEvolucao">
+<h2 id="tituloEvolucao">
                     Evolução mensal
                 </h2>
-
-                <p>
+<p>
                     Passe o mouse para ver os valores.
                     No celular, deslize horizontalmente sobre o gráfico.
                 </p>
-            </div>
-        </div>
-
-        <div
-            id="evolucaoChart"
-            class="chart chart-evolution"
-        ></div>
-
-    </article>
-
 </div>
-
-
-<div
-    id="dashboardAtualizando"
-    class="updating-pill hidden"
->
-    <span class="spinner"></span>
+</div>
+<div class="chart chart-evolution" id="evolucaoChart"></div>
+</article>
+</div>
+<div class="updating-pill hidden" id="dashboardAtualizando">
+<span class="spinner"></span>
     Atualizando...
 </div>
-
-
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-
-<script src="assets/js/config.js?v=7.3"></script>
-<script src="assets/js/metrics.js?v=7.3"></script>
-<script src="assets/js/api.js?v=7.3"></script>
-<script src="assets/js/theme.js?v=7.3"></script>
-<script src="assets/js/filters.js?v=7.3"></script>
-<script src="assets/js/charts.js?v=7.3"></script>
-<script src="assets/js/detalhes.js?v=7.3"></script>
-
+<script src="assets/js/config.js?v=7.4"></script>
+<script src="assets/js/metrics.js?v=7.4"></script>
+<script src="assets/js/api.js?v=7.4"></script>
+<script src="assets/js/theme.js?v=7.4"></script>
+<script src="assets/js/filters.js?v=7.4"></script>
+<script src="assets/js/charts.js?v=7.4"></script>
+<script src="assets/js/detalhes.js?v=7.4"></script>
 </body>
 </html>

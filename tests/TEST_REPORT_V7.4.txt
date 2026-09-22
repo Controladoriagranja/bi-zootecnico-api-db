@@ -1,0 +1,28 @@
+BI Zootécnico V7.4 - TEST REPORT
+
+Base:
+- index.html atual enviado pelo usuário.
+- demais arquivos da V7.3 Cloudflare-compatible.
+
+Ordem primeira tela:
+['ano', 'mes', 'status', 'tipoGranja', 'modelo', 'produtor', 'tecnico', 'tipoLinhagem', 'linhagem']
+
+Ordem detalhamento:
+['ano', 'mes', 'indicador', 'produtor', 'tecnico', 'galpao']
+
+Correções:
+- Ano é primeiro filtro.
+- Mês é segundo filtro.
+- selecionar Ano limita visualmente as colunas exibidas.
+- selecionar Mês limita visualmente as linhas exibidas.
+- mapeamento de mês usa numero-1, evitando erro ao exibir apenas um mês.
+- backend mantém YEAR IN(...) e MONTH IN(...).
+- config.js Cloudflare preservado byte a byte.
+
+Testes:
+- sintaxe de todos os JS: OK.
+- sintaxe Python: OK.
+- ordem Ano/Mês nas duas telas: OK.
+- visibleYears/visibleMonths: OK.
+- sourceIndex real do mês: OK.
+- backend Ano/Mês múltiplos: OK.

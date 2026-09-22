@@ -1,17 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <link rel="icon" href="data:,">
-
-    <title>Desempenho Zootécnico</title>
-
-    <script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="data:," rel="icon"/>
+<title>Desempenho Zootécnico</title>
+<script>
         (() => {
             const saved =
                 localStorage.getItem(
@@ -24,247 +19,148 @@
             }
         })();
     </script>
-
-    <link
-        rel="stylesheet"
-        href="assets/css/app.css?v=7.3"
-    >
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css">
+<link href="assets/css/app.css?v=7.4" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/geist/index.css" rel="stylesheet"/>
 </head>
-
 <body>
-
 <div class="app-shell">
-
-    <header class="page-header">
-        <div>
-            <div class="eyebrow">
+<header class="page-header">
+<div>
+<div class="eyebrow">
                 Dashboard Zootécnico
             </div>
-
-            <h1>
+<h1>
                 Desempenho Zootécnico
             </h1>
-
-            <p>
+<p>
                 Acompanhamento dos principais indicadores produtivos
             </p>
-        </div>
-
-        <div class="header-toolbar">
-
-            <a
-                href="formulas.html"
-                class="icon-button icon-button-label"
-            >
-                <span>ƒx</span>
+</div>
+<div class="header-toolbar">
+<a class="icon-button icon-button-label" href="formulas.html">
+<span>ƒx</span>
                 Fórmulas
             </a>
-
-            <button
-                class="icon-button"
-                type="button"
-                data-theme-toggle
-                aria-label="Alternar tema"
-                title="Alternar tema"
-            >
-                <span data-theme-icon>☾</span>
-            </button>
-
-            <div class="update-meta">
-                <span>Última atualização</span>
-                <strong id="ultimaAtualizacao">
+<button aria-label="Alternar tema" class="icon-button" data-theme-toggle="" title="Alternar tema" type="button">
+<span data-theme-icon="">☾</span>
+</button>
+<div class="update-meta">
+<span>Última atualização</span>
+<strong id="ultimaAtualizacao">
                     Carregando...
                 </strong>
-            </div>
-
-        </div>
-    </header>
-
-
-
-    <section class="card filter-card">
-
-        <div class="filter-card-top">
-            <div>
-                <h2>Filtros</h2>
-                <p>
+</div>
+</div>
+</header>
+<section class="card filter-card">
+<div class="filter-card-top">
+<div>
+<h2>Filtros</h2>
+<p>
                     Todos os indicadores compartilham o mesmo contexto.
                 </p>
-            </div>
-
-            <button
-                id="limparFiltros"
-                class="button button-ghost-danger"
-                type="button"
-            >
+</div>
+<button class="button button-ghost-danger" id="limparFiltros" type="button">
                 Limpar filtros
             </button>
-        </div>
-
-        <div class="filters-grid first-page-filters">
-
-            <div class="filter-field">
-                <span>Status Acerto</span>
-                <div id="status" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Tipo de Granja</span>
-                <div id="tipoGranja" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Modelo</span>
-                <div id="modelo" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Produtor</span>
-                <div id="produtor" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Técnico</span>
-                <div id="tecnico" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Ano</span>
-                <div id="ano" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Mês</span>
-                <div id="mes" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Tipo de Linhagem</span>
-                <div id="tipoLinhagem" class="checkbox-multiselect"></div>
-            </div>
-
-            <div class="filter-field">
-                <span>Linhagem</span>
-                <div id="linhagem" class="checkbox-multiselect"></div>
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <div
-        id="mensagemErro"
-        class="alert alert-error hidden"
-    ></div>
-
-
-    <section
-        id="loadingDashboard"
-        class="dashboard-grid"
-    >
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-    </section>
-
-
-    <main
-        id="indicadores"
-        class="dashboard-grid hidden"
-    ></main>
-
+</div>
+<div class="filters-grid first-page-filters"><div class="filter-field">
+<span>Ano</span>
+<div class="checkbox-multiselect" id="ano"></div>
+</div><div class="filter-field">
+<span>Mês</span>
+<div class="checkbox-multiselect" id="mes"></div>
+</div>
+<div class="filter-field">
+<span>Status Acerto</span>
+<div class="checkbox-multiselect" id="status"></div>
+</div>
+<div class="filter-field">
+<span>Tipo de Granja</span>
+<div class="checkbox-multiselect" id="tipoGranja"></div>
+</div>
+<div class="filter-field">
+<span>Modelo</span>
+<div class="checkbox-multiselect" id="modelo"></div>
+</div>
+<div class="filter-field">
+<span>Produtor</span>
+<div class="checkbox-multiselect" id="produtor"></div>
+</div>
+<div class="filter-field">
+<span>Técnico</span>
+<div class="checkbox-multiselect" id="tecnico"></div>
 </div>
 
 
-<div
-    id="formulaModal"
-    class="dialog-layer hidden"
->
-    <div
-        id="formulaModalBackdrop"
-        class="dialog-backdrop"
-    ></div>
-
-    <section
-        class="dialog-card"
-        role="dialog"
-        aria-modal="true"
-    >
-        <header class="dialog-header">
-            <div>
-                <div class="eyebrow">
+<div class="filter-field">
+<span>Tipo de Linhagem</span>
+<div class="checkbox-multiselect" id="tipoLinhagem"></div>
+</div>
+<div class="filter-field">
+<span>Linhagem</span>
+<div class="checkbox-multiselect" id="linhagem"></div>
+</div>
+</div>
+</section>
+<div class="alert alert-error hidden" id="mensagemErro"></div>
+<section class="dashboard-grid" id="loadingDashboard">
+<div class="skeleton"></div>
+<div class="skeleton"></div>
+<div class="skeleton"></div>
+<div class="skeleton"></div>
+<div class="skeleton"></div>
+<div class="skeleton"></div>
+</section>
+<main class="dashboard-grid hidden" id="indicadores"></main>
+</div>
+<div class="dialog-layer hidden" id="formulaModal">
+<div class="dialog-backdrop" id="formulaModalBackdrop"></div>
+<section aria-modal="true" class="dialog-card" role="dialog">
+<header class="dialog-header">
+<div>
+<div class="eyebrow">
                     Fórmula do indicador
                 </div>
-
-                <h2 id="formulaModalTitulo">
+<h2 id="formulaModalTitulo">
                     Indicador
                 </h2>
-            </div>
-
-            <button
-                id="formulaModalFechar"
-                class="icon-button"
-                type="button"
-            >
+</div>
+<button class="icon-button" id="formulaModalFechar" type="button">
                 ×
             </button>
-        </header>
-
-        <div class="dialog-body">
-
-            <div class="info-block">
-                <span>Fórmula</span>
-                <div
-                    id="formulaModalFormula"
-                    class="code-inline"
-                ></div>
-            </div>
-
-            <div class="info-block">
-                <span>Descrição</span>
-                <p id="formulaModalDescricao"></p>
-            </div>
-
-            <div
-                id="formulaModalPonderacaoContainer"
-                class="info-block"
-            >
-                <span>Ponderação</span>
-                <p id="formulaModalPonderacao"></p>
-            </div>
-
-            <div
-                id="formulaModalRegraContainer"
-                class="notice hidden"
-            >
-                <strong>Regra adicional</strong>
-                <p id="formulaModalRegra"></p>
-            </div>
-
-            <details class="code-details">
-                <summary>
+</header>
+<div class="dialog-body">
+<div class="info-block">
+<span>Fórmula</span>
+<div class="code-inline" id="formulaModalFormula"></div>
+</div>
+<div class="info-block">
+<span>Descrição</span>
+<p id="formulaModalDescricao"></p>
+</div>
+<div class="info-block" id="formulaModalPonderacaoContainer">
+<span>Ponderação</span>
+<p id="formulaModalPonderacao"></p>
+</div>
+<div class="notice hidden" id="formulaModalRegraContainer">
+<strong>Regra adicional</strong>
+<p id="formulaModalRegra"></p>
+</div>
+<details class="code-details">
+<summary>
                     Ver DAX original
                 </summary>
-
-                <pre><code id="formulaModalDax"></code></pre>
-            </details>
-
-        </div>
-    </section>
+<pre><code id="formulaModalDax"></code></pre>
+</details>
 </div>
-
-
-<script src="assets/js/config.js?v=7.3"></script>
-<script src="assets/js/metrics.js?v=7.3"></script>
-<script src="assets/js/api.js?v=7.3"></script>
-<script src="assets/js/theme.js?v=7.3"></script>
-<script src="assets/js/filters.js?v=7.3"></script>
-<script src="assets/js/dashboard.js?v=7.3"></script>
-
+</section>
+</div>
+<script src="assets/js/config.js?v=7.4"></script>
+<script src="assets/js/metrics.js?v=7.4"></script>
+<script src="assets/js/api.js?v=7.4"></script>
+<script src="assets/js/theme.js?v=7.4"></script>
+<script src="assets/js/filters.js?v=7.4"></script>
+<script src="assets/js/dashboard.js?v=7.4"></script>
 </body>
 </html>

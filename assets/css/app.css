@@ -1892,3 +1892,33 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* ============================================================
+   V7.4 - ANO/MÊS PRIMEIROS + FILTRO EFETIVO
+   ============================================================ */
+
+.first-page-filters {
+    grid-template-columns:
+        repeat(9, minmax(118px, 1fr));
+}
+
+@media (max-width: 1500px) {
+    .first-page-filters {
+        grid-template-columns:
+            repeat(5, minmax(145px, 1fr));
+    }
+}
+
+@media (max-width: 980px) {
+    .first-page-filters {
+        grid-template-columns:
+            repeat(3, minmax(145px, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .first-page-filters {
+        grid-template-columns: 1fr;
+    }
+}

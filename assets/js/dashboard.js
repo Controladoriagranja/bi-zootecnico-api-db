@@ -1,5 +1,17 @@
 const FIRST_FILTERS = [
     {
+        id: "ano",
+        apiKey: "ano",
+        search: false,
+        multi: true
+    },
+    {
+        id: "mes",
+        apiKey: "mes",
+        search: false,
+        multi: true
+    },
+    {
         id: "status",
         apiKey: "status_acerto",
         search: true,
@@ -27,18 +39,6 @@ const FIRST_FILTERS = [
         id: "tecnico",
         apiKey: "tecnico",
         search: true,
-        multi: true
-    },
-    {
-        id: "ano",
-        apiKey: "ano",
-        search: false,
-        multi: true
-    },
-    {
-        id: "mes",
-        apiKey: "mes",
-        search: false,
         multi: true
     },
     {
@@ -284,6 +284,72 @@ function sortIcon(
 }
 
 
+
+function selectedFilterValues(apiKey) {
+    const value =
+        filters.values()?.[apiKey];
+
+    if (Array.isArray(value)) {
+        return value.map(String);
+    }
+
+    if (
+        value === null
+        || value === undefined
+        || value === ""
+    ) {
+        return [];
+    }
+
+    return [String(value)];
+}
+
+
+function visibleYears() {
+    const selected =
+        selectedFilterValues("ano");
+
+    const available =
+        (dashboardData?.anos || [])
+            .map(Number);
+
+    if (!selected.length) {
+        return available;
+    }
+
+    const selectedSet =
+        new Set(selected.map(Number));
+
+    return available.filter(
+        year =>
+            selectedSet.has(Number(year))
+    );
+}
+
+
+function visibleMonths() {
+    const selected =
+        selectedFilterValues("mes");
+
+    const available =
+        dashboardData?.meses || [];
+
+    if (!selected.length) {
+        return available;
+    }
+
+    const selectedSet =
+        new Set(selected.map(Number));
+
+    return available.filter(
+        month =>
+            selectedSet.has(
+                Number(month.numero)
+            )
+    );
+}
+
+
 function rowsFor(
     metricId,
     metric,
@@ -292,15 +358,18 @@ function rowsFor(
 ) {
     const rows =
         months.map(
-            (month, index) => {
+            month => {
                 const values = {};
+
+                const sourceIndex =
+                    Number(month.numero) - 1;
 
                 years.forEach(year => {
                     values[String(year)] =
                         metric
                             .por_ano?.[
                                 String(year)
-                            ]?.[index]
+                            ]?.[sourceIndex]
                         ?? null;
                 });
 
@@ -384,10 +453,10 @@ function metricCard(
         }`;
 
     const years =
-        dashboardData.anos;
+        visibleYears();
 
     const months =
-        dashboardData.meses;
+        visibleMonths();
 
     const rows =
         rowsFor(

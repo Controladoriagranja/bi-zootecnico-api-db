@@ -1,23 +1,17 @@
 const APP_CONFIG = {
-    mode: "api-cloudflare",
+  mode: "api-cloudflare",
 
-    API_URL:
-        "https://api-bi-granja.controladoriagb05.workers.dev",
+  API_URL: "https://api-bi-granja.controladoriagb05.workers.dev",
 
-    endpoints: {
-        health:
-            "/api/zootecnico/health",
+  endpoints: {
+    health: "/api/zootecnico/health",
 
-        info:
-            "/api/zootecnico/info",
+    info: "/api/zootecnico/info",
 
-        filtros:
-            "/api/zootecnico/filtros",
+    filtros: "/api/bi/zootecnico/filtros",
 
-        desempenho:
-            "/api/zootecnico/desempenho",
+    desempenho: "/api/zootecnico/desempenho",
 
-        detalhes:
-            "/api/zootecnico/detalhes"
-    }
+    detalhes: "/api/zootecnico/detalhes",
+  },
 };

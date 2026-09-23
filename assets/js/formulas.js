@@ -1,57 +1,36 @@
 function escapeHtml(texto) {
-    return String(texto || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
+  return String(texto || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
-
 async function carregarFormulas() {
-    const container =
-        document.getElementById(
-            "formulaContainer"
-        );
+  const container = document.getElementById("formulaContainer");
 
-    try {
-        const resposta =
-            await apiGet(
-                APP_CONFIG
-                    .endpoints
-                    .formulas
-            );
+  try {
+    const metricas = BI_METRIC_ORDER.map((id) => METRICAS[id]).filter(Boolean);
 
-        container.innerHTML = "";
+    metricas.forEach((metrica) => {
+      const card = document.createElement("article");
 
-        resposta.metricas.forEach(
-            metrica => {
-                const card =
-                    document.createElement(
-                        "article"
-                    );
+      card.className = "formula-card";
 
-                card.className =
-                    "formula-card";
-
-                const regra =
-                    metrica.regra_adicional
-                        ? `
+      const regra = metrica.regra_adicional
+        ? `
                             <div class="notice">
                                 <strong>
                                     Regra adicional
                                 </strong>
 
                                 <p>
-                                    ${
-                                        metrica
-                                            .regra_adicional
-                                            .descricao
-                                    }
+                                    ${metrica.regra_adicional.descricao}
                                 </p>
                             </div>
                         `
-                        : "";
+        : "";
 
-                card.innerHTML = `
+      card.innerHTML = `
                     <div class="formula-title">
                         <h2>
                             ${metrica.nome}
@@ -68,10 +47,7 @@ async function carregarFormulas() {
                         </strong>
 
                         <div class="code-inline">
-                            ${
-                                metrica
-                                    .formula_exibicao
-                            }
+                            ${metrica.formula_exibicao}
                         </div>
                     </div>
 
@@ -86,8 +62,8 @@ async function carregarFormulas() {
                     </div>
 
                     ${
-                        metrica.ponderador
-                            ? `
+                      metrica.ponderador
+                        ? `
                                 <div class="formula-section">
                                     <strong>
                                         Ponderação
@@ -98,7 +74,7 @@ async function carregarFormulas() {
                                     </p>
                                 </div>
                             `
-                            : ""
+                        : ""
                     }
 
                     ${regra}
@@ -108,31 +84,21 @@ async function carregarFormulas() {
                             Ver DAX original
                         </summary>
 
-                        <pre><code>${
-                            escapeHtml(
-                                metrica.formula_dax
-                            )
-                        }</code></pre>
+                        <pre><code>${escapeHtml(
+                          metrica.formula_dax,
+                        )}</code></pre>
                     </details>
                 `;
 
-                container.appendChild(
-                    card
-                );
-            }
-        );
-    }
-    catch (error) {
-        container.innerHTML = `
+      container.appendChild(card);
+    });
+  } catch (error) {
+    container.innerHTML = `
             <div class="alert alert-error">
-                ${
-                    error.message
-                    || "Não foi possível carregar as fórmulas."
-                }
+                ${error.message || "Não foi possível carregar as fórmulas."}
             </div>
         `;
-    }
+  }
 }
-
 
 carregarFormulas();

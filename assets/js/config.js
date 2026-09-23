@@ -11,9 +11,6 @@ const APP_CONFIG = {
         info:
             "/api/zootecnico/info",
 
-        formulas:
-            "/api/zootecnico/formulas",
-
         filtros:
             "/api/zootecnico/filtros",
 

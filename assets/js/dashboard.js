@@ -959,33 +959,30 @@ async function iniciar() {
     try {
         filters.register();
 
-        const [
-            formulas
-        ] = await Promise.all([
-            apiGet(
-                APP_CONFIG
-                    .endpoints
-                    .formulas
-            ),
-            filters.loadOptions({
-                preserve: false
-            })
-        ]);
-
         formulasCatalogo = {};
 
-        formulas.metricas.forEach(
-            metric => {
-                formulasCatalogo[
-                    metric.id
-                ] = metric;
+        BI_METRIC_ORDER.forEach(
+            metricId => {
+                const metric =
+                    METRICAS[metricId];
+
+                if (metric) {
+                    formulasCatalogo[
+                        metricId
+                    ] = metric;
+                }
             }
         );
+
+        await filters.loadOptions({
+            preserve: false
+        });
 
         await carregarDashboard(true);
     }
     catch (error) {
         console.error(error);
+
         errorMessage(
             error.message
             || "Falha ao iniciar."

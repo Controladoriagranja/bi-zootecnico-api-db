@@ -220,8 +220,15 @@ class FilterController {
     }
 
 normalizeOptions(field, raw) {
+    const items = Array.isArray(raw) ? raw : [];
+
     if (field.apiKey === "ano") {
-        return raw
+        return items
+            .map(item => (
+                item && typeof item === "object"
+                    ? (item.valor ?? item.value)
+                    : item
+            ))
             .filter(item => Number(item) >= 2023)
             .map(item => ({
                 value: String(item),
@@ -229,20 +236,104 @@ normalizeOptions(field, raw) {
             }));
     }
 
-    if (
-        field.apiKey === "mes"
-        || field.apiKey === "tipo_linhagem"
-    ) {
-        return raw.map(item => ({
-            value: String(item.valor),
-            label: String(item.nome)
-        }));
+    if (field.apiKey === "mes") {
+        const monthAliases = {
+            "1": 1, "01": 1, "jan": 1, "janeiro": 1,
+            "2": 2, "02": 2, "fev": 2, "fevereiro": 2,
+            "3": 3, "03": 3, "mar": 3, "marco": 3, "março": 3,
+            "4": 4, "04": 4, "abr": 4, "abril": 4,
+            "5": 5, "05": 5, "mai": 5, "maio": 5,
+            "6": 6, "06": 6, "jun": 6, "junho": 6,
+            "7": 7, "07": 7, "jul": 7, "julho": 7,
+            "8": 8, "08": 8, "ago": 8, "agosto": 8,
+            "9": 9, "09": 9, "set": 9, "setembro": 9,
+            "10": 10, "out": 10, "outubro": 10,
+            "11": 11, "nov": 11, "novembro": 11,
+            "12": 12, "dez": 12, "dezembro": 12
+        };
+
+        const monthNames = [
+            "janeiro", "fevereiro", "março", "abril",
+            "maio", "junho", "julho", "agosto",
+            "setembro", "outubro", "novembro", "dezembro"
+        ];
+
+        return items
+            .map(item => {
+                if (item && typeof item === "object") {
+                    const value = item.valor ?? item.value;
+                    const label = item.nome ?? item.label ?? value;
+                    const normalized = monthAliases[
+                        String(value ?? "").trim().toLocaleLowerCase("pt-BR")
+                    ];
+                    if (!normalized) {
+                        return null;
+                    }
+                    return {
+                        value: String(normalized),
+                        label: String(label || monthNames[normalized - 1])
+                    };
+                }
+
+                const rawValue = String(item ?? "").trim();
+                const normalized = monthAliases[
+                    rawValue.toLocaleLowerCase("pt-BR")
+                ];
+                if (!normalized) {
+                    return null;
+                }
+                return {
+                    value: String(normalized),
+                    label: monthNames[normalized - 1]
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => Number(a.value) - Number(b.value));
     }
 
-    return raw.map(item => ({
-        value: String(item),
-        label: String(item)
-    }));
+    if (field.apiKey === "tipo_linhagem") {
+        return items
+            .map(item => {
+                if (item && typeof item === "object") {
+                    const value = item.valor ?? item.value;
+                    const label = item.nome ?? item.label ?? value;
+                    if (value === null || value === undefined || value === "") {
+                        return null;
+                    }
+                    return {
+                        value: String(value).toLocaleLowerCase("pt-BR"),
+                        label: String(label)
+                    };
+                }
+
+                const value = String(item ?? "").trim();
+                if (!value) {
+                    return null;
+                }
+                const normalized = value.toLocaleLowerCase("pt-BR");
+                return {
+                    value: normalized,
+                    label: normalized === "mista"
+                        ? "Mista"
+                        : normalized === "pura"
+                            ? "Pura"
+                            : value
+                };
+            })
+            .filter(Boolean);
+    }
+
+    return items
+        .map(item => (
+            item && typeof item === "object"
+                ? (item.valor ?? item.value ?? item.nome ?? item.label)
+                : item
+        ))
+        .filter(item => item !== null && item !== undefined && item !== "")
+        .map(item => ({
+            value: String(item),
+            label: String(item)
+        }));
 }
     renderMultiOptions(field, options, selected) {
         const state = this.buildMulti(field);

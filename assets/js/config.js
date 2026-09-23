@@ -10,8 +10,8 @@ const APP_CONFIG = {
 
     filtros: "/api/bi/zootecnico/filtros",
 
-    desempenho: "/api/zootecnico/desempenho",
+    desempenho: "/api/bi/zootecnico/resumo",
 
-    detalhes: "/api/zootecnico/detalhes",
+    detalhes: "/api/bi/zootecnico/detalhes",
   },
 };

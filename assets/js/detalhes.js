@@ -111,15 +111,11 @@ function allFilters() {
 
 
 async function carregarIndicadores() {
-    const response =
-        await apiGet(
-            APP_CONFIG.endpoints.formulas
-        );
-
-    metricCatalog =
-        Array.isArray(response.metricas)
-            ? response.metricas
-            : [];
+    // O catálogo de fórmulas é estático e já está em metrics.js.
+    // Não depende mais de endpoint /formulas.
+    metricCatalog = BI_METRIC_ORDER
+        .map(metricId => METRICAS[metricId])
+        .filter(Boolean);
 
     const select =
         document.getElementById(

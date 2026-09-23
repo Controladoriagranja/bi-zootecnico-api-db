@@ -1,0 +1,33 @@
+VALIDAÇÃO DO PACOTE SQL/CLOUDFLARE
+Data: 2026-09-23
+
+VALIDAÇÕES EXECUTADAS NESTE PACOTE
+- Sintaxe JS validada com node --check:
+  config.js, api.js, filters.js, dashboard.js, detalhes.js, metrics.js.
+- Sintaxe Python validada com py_compile:
+  anderson_api_patch/bi_generic/__init__.py
+  anderson_api_patch/bi_generic/registry.py
+  anderson_api_patch/bi_generic/router.py
+  anderson_api_patch/bi_generic/sql_utils.py
+- Teste isolado de normalização dos filtros JS:
+  mês: "Ago", objeto julho e "02" => 8, 7 e 2, ordenados cronologicamente.
+  tipo_linhagem: "Mista" e objeto "pura" => mista/pura.
+  ano: 2022 removido; 2023 e 2026 preservados.
+- Busca estática confirmou que o frontend não referencia mais:
+  /api/zootecnico/desempenho
+  /api/zootecnico/detalhes
+  APP_CONFIG.endpoints.formulas
+
+VALIDAÇÕES QUE PRECISAM SER EXECUTADAS NO PC DO ANDERSON
+- Rebuild do container zootecnico.
+- /api/zootecnico/health => 200.
+- /api/bi/zootecnico/filtros => 200.
+- /api/bi/zootecnico/resumo => 200.
+- /api/bi/zootecnico/resumo?mes=7&mes=8 => 200.
+- /api/bi/zootecnico/detalhes?indicador=iep => 200.
+- Logs sem traceback.
+- Teste externo via Worker/Cloudflare com Bearer da CENTRAL.
+- Teste visual final no BI dentro da CENTRAL.
+
+OBSERVAÇÃO
+Não foi possível executar consultas reais ao PostgreSQL neste ambiente de edição; por isso o teste de banco deve ser feito no servidor conforme LEIA-ME.txt.
